@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { CopyButton, fmtDate, Icon, Modal, PageHeader, PhaseBadge, useConfirm } from '../components/ui';
+import { Link, useNavigate } from 'react-router';
+import { openProjector } from './ProjectorPage';
+import { fmtDate, Icon, Modal, PageHeader, PhaseBadge, useConfirm } from '../components/ui';
 import { useLive } from '../lib/admin-socket';
 import { fetchSettings } from '../lib/settings';
 import { LIMITS, type AdminRoom } from '../protocol';
@@ -9,11 +11,11 @@ export function GamesPage() {
   const { rooms, call, online } = useLive();
   const { confirm, dialog } = useConfirm();
   const [createOpen, setCreateOpen] = useState(false);
-  const [created, setCreated] = useState<{ code: string; name: string } | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [defaultMax, setDefaultMax] = useState(30);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchSettings()
@@ -40,8 +42,8 @@ export function GamesPage() {
     setBusy(false);
     if (!res.ok) return setError(res.error);
     setCreateOpen(false);
-    setCreated({ code: res.data.code, name });
-    setOpen(res.data.id);
+    // La partie s'ouvre directement : écran (lobby) et gestion
+    navigate(`/regie/${res.data.id}`);
   }
 
   async function start(r: AdminRoom) {
@@ -146,24 +148,6 @@ export function GamesPage() {
         </form>
       </Modal>
 
-      <Modal
-        open={!!created}
-        title="Partie créée"
-        onClose={() => setCreated(null)}
-        footer={
-          <button className="btn btn-primary" onClick={() => setCreated(null)}>
-            Terminé
-          </button>
-        }
-      >
-        <p>
-          Communiquez ce code aux joueurs de <strong>{created?.name}</strong> :
-        </p>
-        <div className="big-code">{created?.code}</div>
-        <div className="center">
-          <CopyButton value={created?.code ?? ''} label="Copier le code" />
-        </div>
-      </Modal>
 
       {dialog}
     </>
@@ -201,6 +185,12 @@ function RoomRows(props: {
           {fmtDate.format(r.createdAt)} · {r.createdBy}
         </td>
         <td className="actions">
+          <Link to={`/regie/${r.id}`} target="_blank" className="btn btn-sm btn-primary" title="Ouvre la gestion dans un nouvel onglet">
+            Gestion
+          </Link>
+          <button className="btn btn-sm" onClick={() => openProjector(r.id)} title="Ouvre l’écran à projeter">
+            Écran
+          </button>
           {r.phase === 'lobby' && (
             <button className="btn btn-sm btn-success" onClick={props.onStart} disabled={!r.players.length}>
               <Icon name="play" size={16} /> Lancer

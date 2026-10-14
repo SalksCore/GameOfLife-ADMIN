@@ -6,6 +6,7 @@ import { getAccessToken, logout, refreshSession } from './api';
 export type AdminSocket = Socket<AdminServerToClientEvents, AdminClientToServerEvents>;
 
 interface Live {
+  socket: AdminSocket | null;
   online: boolean;
   error: string | null;
   stats: AdminStats | null;
@@ -73,7 +74,10 @@ export function LiveProvider({ children }: { children: ReactNode }) {
     [socket],
   ) as Live['call'];
 
-  const value = useMemo(() => ({ online, error, stats, rooms, call }), [online, error, stats, rooms, call]);
+  const value = useMemo(
+    () => ({ socket, online, error, stats, rooms, call }),
+    [socket, online, error, stats, rooms, call],
+  );
   return <LiveContext value={value}>{children}</LiveContext>;
 }
 

@@ -1,4 +1,4 @@
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes } from 'react-router';
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useParams } from 'react-router';
 import { Icon, type IconName } from './components/ui';
 import { LiveProvider, useLive } from './lib/admin-socket';
 import { logout } from './lib/api';
@@ -11,6 +11,8 @@ import { LoginPage } from './pages/LoginPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { PlayerProfilePage } from './pages/PlayerProfilePage';
 import { PlayersPage } from './pages/PlayersPage';
+import { ProjectorPage } from './pages/ProjectorPage';
+import { RegiePage } from './pages/RegiePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { StatsPage } from './pages/StatsPage';
 
@@ -99,6 +101,7 @@ function Shell({ username }: { username: string }) {
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/parties" element={<GamesPage />} />
+            <Route path="/parties/:id" element={<ToRegie />} />
             <Route path="/statistiques" element={<StatsPage />} />
             <Route path="/joueurs" element={<PlayersPage />} />
             <Route path="/joueurs/:id" element={<PlayerProfilePage />} />
@@ -114,6 +117,12 @@ function Shell({ username }: { username: string }) {
   );
 }
 
+/** Ancienne adresse d'une partie : redirige vers sa gestion */
+function ToRegie() {
+  const { id } = useParams();
+  return <Navigate to={`/regie/${id}`} replace />;
+}
+
 export function App() {
   const { user, ready } = useSession();
   if (!ready) return <div className="boot">Chargement…</div>;
@@ -122,7 +131,13 @@ export function App() {
   return (
     <BrowserRouter>
       <LiveProvider key={user.id}>
-        <Shell username={user.username} />
+        <Routes>
+          {/* Écran du vidéoprojecteur : plein cadre, sans le menu */}
+          <Route path="/ecran/:id" element={<ProjectorPage />} />
+          {/* Gestion d'une partie : page à part, plein écran, sans le menu */}
+          <Route path="/regie/:id" element={<RegiePage />} />
+          <Route path="/*" element={<Shell username={user.username} />} />
+        </Routes>
       </LiveProvider>
     </BrowserRouter>
   );
