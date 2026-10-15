@@ -144,7 +144,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
           </span>
           {inGame && (
             <span className="rg-stage">
-              {STAGE_LABELS[board.stage]} · {board.step === 'choose' || board.step === 'reveal' ? `tour ${board.roundIndex + 1}/${board.roundCount}` : board.step === 'intro' ? 'introduction' : 'bilan'}
+              {STAGE_LABELS[board.stage]} · {board.step === 'play' ? 'temps libre' : board.step === 'intro' ? 'introduction' : 'bilan'}
             </span>
           )}
         </div>
@@ -175,8 +175,16 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
                   <span className="rg-name">{r.displayName}</span>
                   {r.game ? (
                     <>
-                      {board?.step === 'choose' && (
-                        <span className={`rg-answer${r.game.answered ? ' on' : ''}`} title={r.game.answered ? 'A répondu' : 'Pas encore répondu'} />
+                      {r.game.busy ? (
+                        <span className="rg-doing alert" title={control.pending[r.id] ?? 'Situation en cours'}>
+                          !
+                        </span>
+                      ) : (
+                        r.game.activity && (
+                          <span className="rg-doing" title={r.game.activity.label}>
+                            {r.game.activity.emoji}
+                          </span>
+                        )
                       )}
                       <span className="rg-cls" data-cls={r.game.cls}>
                         {short(r.game.cls)}
@@ -195,7 +203,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
               ))}
             </ul>
           )}
-          {selectedRow && <PlayerDetail row={selectedRow} choice={control.choices[selectedRow.id] ?? null} />}
+          {selectedRow && <PlayerDetail row={selectedRow} pending={control.pending[selectedRow.id] ?? null} />}
         </Dock>
 
         {/* ---------- Programme ---------- */}
@@ -210,7 +218,19 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
 
           {inGame && (
             <div className="rg-center-row">
-              <Upcoming control={control} offset={offset} onReroll={() => void gameControl('reroll')} />
+              <Dock title="En ce moment" className="rg-now">
+                <ul className="rg-now-list">
+                  {board.players
+                    .filter((p) => p.activity || p.busy)
+                    .map((p) => (
+                      <li key={p.id}>
+                        <Token avatar={p.avatar} color={p.color} />
+                        <strong>{p.displayName}</strong>
+                        <span>{p.busy ? `répond à : ${control.pending[p.id] ?? 'une situation'}` : `${p.activity!.emoji} ${p.activity!.label}`}</span>
+                      </li>
+                    ))}
+                </ul>
+              </Dock>
               <Dock title="Commandes" className="rg-transport">
                 <div className="rg-transport-grid">
                   {board.paused ? (
@@ -222,11 +242,8 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
                       ❚❚ Pause
                     </button>
                   )}
-                  <button className="rg-btn" onClick={() => void gameControl('skip')}>
-                    ⏭ Passer l’étape en cours
-                  </button>
                   <button className="rg-btn" onClick={() => void gameControl('nextStage')}>
-                    ⏩ Aller au bilan « {STAGE_LABELS[board.stage]} »
+                    ⏩ {board.step === 'milestone' ? 'Étape suivante' : `Finir « ${STAGE_LABELS[board.stage]} » (bilan)`}
                   </button>
                   <button className="rg-btn danger" onClick={() => void end()}>
                     ■ Terminer (pyramide)
@@ -287,9 +304,9 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
       {/* ---------- Barre d'état ---------- */}
       <footer className="rg-status">
         <span className={`rg-dot ${online ? 'on' : 'off'}`} /> {online ? 'Connecté au serveur' : 'Hors ligne, reconnexion…'}
-        {board?.step === 'choose' && (
+        {board?.step === 'play' && (
           <span>
-            Réponses : <b>{board.answered}</b>/{board.total}
+            Situations en attente : <b>{board.players.filter((p) => p.busy).length}</b> · Activités : <b>{board.players.filter((p) => p.activity).length}</b>
           </span>
         )}
         {board?.paused && <span className="rg-warn">EN PAUSE</span>}
@@ -309,6 +326,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
           onClose={() => setMenu(null)}
           onRole={(role) => void run('admin:setRole', { roomId, playerId: menu.playerId, role })}
           onGive={(amount, name) => void give(menu.playerId, amount, name)}
+          onNudge={() => void run('admin:nudge', { roomId, playerId: menu.playerId }).then((ok) => ok && notify('Situation envoyée'))}
           onKick={(row) => void kick(row)}
         />
       )}
@@ -344,7 +362,7 @@ function Dock({
   );
 }
 
-function PlayerDetail({ row, choice }: { row: Row; choice: string | null }) {
+function PlayerDetail({ row, pending }: { row: Row; pending: string | null }) {
   const g = row.game;
   return (
     <div className="rg-detail">
@@ -373,8 +391,10 @@ function PlayerDetail({ row, choice }: { row: Row; choice: string | null }) {
           </dd>
           <dt>Dernier titre</dt>
           <dd>{g.title ?? '—'}</dd>
-          <dt>Choix en cours</dt>
-          <dd>{choice ?? '—'}</dd>
+          <dt>Activité</dt>
+          <dd>{g.activity ? `${g.activity.emoji} ${g.activity.label}` : '—'}</dd>
+          <dt>Situation en attente</dt>
+          <dd>{pending ?? '—'}</dd>
         </dl>
       ) : (
         <p className="rg-muted">
@@ -395,6 +415,7 @@ function PlayerMenu({
   onClose,
   onRole,
   onGive,
+  onNudge,
   onKick,
 }: {
   x: number;
@@ -405,6 +426,7 @@ function PlayerMenu({
   onClose: () => void;
   onRole: (role: SocialClass | null) => void;
   onGive: (amount: number, name: string) => void;
+  onNudge: () => void;
   onKick: (row: Row) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -456,6 +478,9 @@ function PlayerMenu({
       )}
       {inGame && (
         <>
+          <button role="menuitem" onClick={act(onNudge)}>
+            🎴 Envoyer une situation de vie
+          </button>
           <div className="rg-menu-label">Argent</div>
           {[500, 2_000, 10_000].map((v) => (
             <button key={v} role="menuitem" onClick={act(() => onGive(v, row.displayName))}>
@@ -556,45 +581,6 @@ function Setup({
           Copier le lien d’invitation
         </button>
       </div>
-    </Dock>
-  );
-}
-
-/** Situation suivante, connue à l'avance : la régie peut la changer avant qu'elle s'affiche */
-function Upcoming({ control, offset, onReroll }: { control: ControlView; offset: number; onReroll: () => void }) {
-  const up = control.upcoming;
-  const [now, setNow] = useState(() => Date.now() + offset);
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now() + offset), 500);
-    return () => clearInterval(id);
-  }, [offset]);
-  const inSec = up?.startsAt == null ? null : Math.max(0, Math.ceil((up.startsAt - now) / 1000));
-  return (
-    <Dock
-      title="À suivre (aperçu)"
-      className="rg-upcoming"
-      badge={up && <span className={`rg-count${inSec !== null && inSec <= 15 ? ' soon' : ''}`}>{inSec === null ? 'pause' : `dans ${inSec} s`}</span>}
-    >
-      {up ? (
-        <div className="rg-pad rg-up">
-          <span className="rg-up-emoji">{up.situation.emoji}</span>
-          <div>
-            <small className="rg-muted">{STAGE_LABELS[up.situation.stage]}</small>
-            <strong>{up.situation.title}</strong>
-            <p>{up.situation.text}</p>
-            <ul>
-              {up.options.map((o) => (
-                <li key={o}>{o}</li>
-              ))}
-            </ul>
-          </div>
-          <button className="rg-btn" onClick={onReroll} title="Remplacer par une autre situation de la même étape">
-            ⟳ Changer
-          </button>
-        </div>
-      ) : (
-        <p className="rg-pad rg-muted">Dernière situation : la pyramide suit.</p>
-      )}
     </Dock>
   );
 }

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import {
   CLASS_LABELS,
-  CLASS_THRESHOLDS,
+  SCENES,
   SOCIAL_CLASSES,
   STAGES,
   STAGE_LABELS,
@@ -76,7 +76,6 @@ function useCountdown(endsAt: number | null, offset: number) {
   return { seconds: Math.ceil(left / 1000), ratio: Math.min(1, left / total.current.ms) };
 }
 
-const money = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 
 /** Écran projeté : salle d'attente, plateau en direct, puis pyramide. */
 export function Screen({ view, offset }: { view: ScreenView; offset: number }) {
@@ -106,6 +105,8 @@ function LobbyScreen({ view }: { view: ScreenView }) {
 
   return (
     <div className="scr-lobby">
+      <img className="scr-scene" src="/scenes/lycee.svg" alt="" />
+      <div className="scr-lobby-shade" />
       <header className="scr-head">
         <span className="scr-brand">
           <LogoMark />
@@ -151,13 +152,74 @@ function LobbyScreen({ view }: { view: ScreenView }) {
   );
 }
 
-// ---------------------------------------------------------------- Plateau
+// ---------------------------------------------------------------- Plateau : la scène en direct
+
+/** Disposition des avatars d'un lieu : petits groupes centrés sur le point d'ancrage, rangées vers l'arrière */
+function clusterOffsets(n: number, perRow: number) {
+  const out: { dx: number; dy: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const row = Math.floor(i / perRow);
+    const inRow = Math.min(perRow, n - row * perRow);
+    const col = i % perRow;
+    out.push({ dx: (col - (inRow - 1) / 2) * 3.1, dy: -row * 3.4 });
+  }
+  return out;
+}
 
 function BoardScreen({ view, board, offset }: { view: ScreenView; board: BoardView; offset: number }) {
   const { seconds, ratio } = useCountdown(board.stepEndsAt, offset);
+  const scene = SCENES[board.stage];
+  const byPlace = new Map<string, BoardPlayer[]>();
+  for (const p of [...board.players].sort((a, b) => a.id.localeCompare(b.id))) {
+    const list = byPlace.get(p.place) ?? [];
+    list.push(p);
+    byPlace.set(p.place, list);
+  }
+  const counts = { basse: 0, moyenne: 0, riche: 0 };
+  for (const p of board.players) counts[p.cls]++;
+  const top = [...board.players].sort((a, b) => b.score - a.score).slice(0, 3);
+  const showNames = board.players.length <= 30;
+  const mm = seconds === null ? '' : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+
   return (
     <div className={`scr-board step-${board.step}`}>
-      <header className="scr-top">
+      <img className="scr-scene" src={`/scenes/${board.stage}.svg`} alt="" />
+      <div className="scr-scene-shade" />
+
+      {/* Lieux et avatars */}
+      <div className="scr-places">
+        {scene.places.map((place) => (
+          <span key={place.id} className="scr-place-label" style={{ left: `clamp(4cqw, ${place.x}%, calc(100% - 4cqw))`, top: `${place.y + 2.2}%` }}>
+            {place.emoji} {place.name}
+          </span>
+        ))}
+        {scene.places.flatMap((place) => {
+          const here = byPlace.get(place.id) ?? [];
+          const offsets = clusterOffsets(here.length, here.length > 12 ? 8 : 6);
+          return here.map((p, i) => (
+            <div
+              key={p.id}
+              className={`scr-avatar${p.activity ? ' busy' : ''}${p.connected ? '' : ' away'}`}
+              style={{ left: `clamp(1.8cqw, calc(${place.x}% + ${offsets[i]!.dx}cqw), calc(100% - 1.8cqw))`, top: `calc(${place.y}% + ${offsets[i]!.dy}cqw)` }}
+            >
+              {p.activity && <span className="scr-doing">{p.activity.emoji}</span>}
+              {p.busy && <span className="scr-alert">!</span>}
+              <span className="scr-ring" data-cls={p.cls}>
+                <Token avatar={p.avatar} color={p.color} dim={!p.connected} />
+              </span>
+              {showNames && <span className="scr-avatar-name">{p.displayName}</span>}
+              {p.pop && (
+                <span key={p.pop.id} className={`scr-pop tone-${p.pop.tone}`}>
+                  {p.pop.text}
+                </span>
+              )}
+            </div>
+          ));
+        })}
+      </div>
+
+      {/* Bandeau du haut */}
+      <header className="scr-hud">
         <div className="scr-stages">
           {STAGES.map((s, i) => (
             <span key={s} className={i < board.stageIndex ? 'done' : i === board.stageIndex ? 'now' : ''}>
@@ -165,114 +227,59 @@ function BoardScreen({ view, board, offset }: { view: ScreenView; board: BoardVi
             </span>
           ))}
         </div>
-        <div className="scr-timer">
+        <div className="scr-clock">
           <span className="scr-timer-bar">
             <span style={{ transform: `scaleX(${board.paused ? 1 : ratio})` }} />
           </span>
-          <strong>{board.paused ? 'PAUSE' : (seconds ?? '')}</strong>
+          <strong>{board.paused ? 'PAUSE' : mm}</strong>
         </div>
-        <div className="scr-meta">
-          {(board.step === 'choose' || board.step === 'reveal') && (
-            <span>
-              Tour {board.roundIndex + 1}/{board.roundCount}
-            </span>
-          )}
-          {board.step === 'choose' && (
-            <span className="scr-answered">
-              {board.answered}/{board.total} ont répondu
-            </span>
-          )}
-          <span className="scr-code-mini">{view.code}</span>
-        </div>
+        <span className="scr-code-mini">{view.code}</span>
       </header>
 
-      <div className="scr-body">
-        <Ladder players={board.players} showNames={board.players.length <= 24} />
-        <aside className="scr-side">
-          {board.situation && (board.step === 'choose' || board.step === 'reveal') ? (
-            <section className="scr-card scr-situation">
-              <span className="scr-sit-emoji">{board.situation.emoji}</span>
-              <h2>{board.situation.title}</h2>
-              <p>{board.situation.text}</p>
-              <ul className="scr-options">
-                {board.options.map((o) => {
-                  const max = Math.max(1, ...board.options.map((x) => x.count));
-                  return (
-                    <li key={o.id}>
-                      <span className="scr-opt-label">
-                        {o.emoji} {o.label}
-                      </span>
-                      {board.step === 'reveal' && (
-                        <span className="scr-opt-bar">
-                          <span style={{ width: `${(o.count / max) * 100}%` }} />
-                          <b>{o.count}</b>
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ) : board.story ? (
-            <section className="scr-card scr-story">
-              <p className="scr-eyebrow">{board.step === 'milestone' ? 'Bilan' : STAGE_LABELS[board.stage]}</p>
-              <h2>{board.story.title}</h2>
-              <p>{board.story.text}</p>
-            </section>
-          ) : null}
+      {/* Panneau : classes, podium, fil */}
+      <aside className="scr-panel">
+        <div className="scr-classes">
+          {(['riche', 'moyenne', 'basse'] as SocialClass[]).map((c) => (
+            <div key={c} className="scr-class-row" data-cls={c}>
+              <span>{CLASS_LABELS[c]}</span>
+              <span className="scr-class-bar">
+                <span style={{ width: `${(counts[c] / Math.max(1, board.players.length)) * 100}%` }} />
+              </span>
+              <b>{counts[c]}</b>
+            </div>
+          ))}
+        </div>
+        <ol className="scr-top3">
+          {top.map((p, i) => (
+            <li key={p.id}>
+              <b>{i + 1}</b>
+              <Token avatar={p.avatar} color={p.color} />
+              <span>{p.displayName}</span>
+              <small data-cls={p.cls}>{p.score.toFixed(0)}</small>
+            </li>
+          ))}
+        </ol>
+        <ol className="scr-feed">
+          {board.feed.slice(0, 5).map((f) => (
+            <li key={f.id} className={`tone-${f.tone}`}>
+              {f.text}
+            </li>
+          ))}
+        </ol>
+      </aside>
 
-          <section className="scr-feed">
-            <ol>
-              {board.feed.slice(0, 7).map((f) => (
-                <li key={f.id} className={`tone-${f.tone}`}>
-                  {f.text}
-                </li>
-              ))}
-            </ol>
+      {/* Introduction et bilans d'étape */}
+      {board.story && (board.step === 'intro' || board.step === 'milestone') && (
+        <div className="scr-story-wrap">
+          <section className="scr-story">
+            <p className="scr-eyebrow">{board.step === 'milestone' ? 'Bilan de l’étape' : `Étape ${board.stageIndex + 1} sur 3`}</p>
+            <h2>{board.story.title}</h2>
+            <p>{board.story.text}</p>
           </section>
-        </aside>
-      </div>
+        </div>
+      )}
       {board.paused && <div className="scr-paused">Pause</div>}
     </div>
-  );
-}
-
-/** Échelle sociale : chaque joueur est placé selon sa position (0-100), dans la bande de sa classe. */
-function Ladder({ players, showNames }: { players: BoardPlayer[]; showNames: boolean }) {
-  const sorted = useMemo(() => [...players].sort((a, b) => a.id.localeCompare(b.id)), [players]);
-  const bands: { cls: SocialClass; from: number; to: number }[] = [
-    { cls: 'riche', from: CLASS_THRESHOLDS.riche, to: 100 },
-    { cls: 'moyenne', from: CLASS_THRESHOLDS.moyenne, to: CLASS_THRESHOLDS.riche },
-    { cls: 'basse', from: 0, to: CLASS_THRESHOLDS.moyenne },
-  ];
-  const counts = { basse: 0, moyenne: 0, riche: 0 };
-  for (const p of players) counts[p.cls]++;
-  const size = players.length <= 12 ? 'lg' : players.length <= 30 ? 'md' : 'sm';
-
-  return (
-    <section className={`scr-ladder size-${size}`}>
-      {bands.map((b) => (
-        <div key={b.cls} className="scr-band" data-cls={b.cls} style={{ height: `${b.to - b.from}%` }}>
-          <span className="scr-band-label">
-            {CLASS_LABELS[b.cls]} <b>{counts[b.cls]}</b>
-          </span>
-        </div>
-      ))}
-      <div className="scr-tokens">
-        {sorted.map((p, i) => (
-          <div
-            key={p.id}
-            className={`scr-player${p.trend ? ` trend-${p.trend}` : ''}${p.answered ? ' answered' : ''}`}
-            style={{ left: `${((i + 0.5) / sorted.length) * 100}%`, bottom: `${Math.max(1, Math.min(97, p.score))}%` }}
-            title={`${p.displayName} · ${p.score.toFixed(0)} · ${money.format(p.capitals.money)}`}
-          >
-            <Token avatar={p.avatar} color={p.color} dim={!p.connected} />
-            {showNames && <span className="scr-player-name">{p.displayName}</span>}
-            {p.trend && <span className="scr-trend">{p.trend === 'up' ? '▲' : '▼'}</span>}
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 
