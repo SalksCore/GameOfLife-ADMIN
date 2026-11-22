@@ -6,6 +6,8 @@ export interface PlayerRow {
   firstName: string;
   lastName: string;
   displayName: string;
+  /** Option anonyme : pseudonyme aléatoire, aucun nom réel */
+  anonymous?: boolean;
   gamesPlayed: number;
   createdAt: string;
   updatedAt: string;
@@ -69,6 +71,10 @@ export const ACTION_LABELS: Record<string, { label: string; tone: 'ok' | 'info' 
   'maintenance.on': { label: 'Maintenance activée', tone: 'danger' },
   'maintenance.off': { label: 'Maintenance terminée', tone: 'ok' },
   'maintenance.update': { label: 'Message de maintenance', tone: 'info' },
+  'expose.update': { label: 'Exposé modifié', tone: 'info' },
+  'game.give': { label: 'Argent donné ou retiré', tone: 'info' },
+  'game.event': { label: 'Événement collectif', tone: 'info' },
+  'retention.purge': { label: 'Suppression automatique (3 mois)', tone: 'warning' },
 };
 
 /** "Mozilla/5.0 (iPhone; …) Safari" -> "Safari · iPhone" */

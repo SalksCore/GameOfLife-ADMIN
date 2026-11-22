@@ -7,6 +7,7 @@ import './styles-pages.css';
 import '@fontsource-variable/bricolage-grotesque';
 import '@fontsource-variable/dm-sans';
 import './screen.css';
+import './screen2.css';
 import './regie.css';
 
 createRoot(document.getElementById('root')!).render(

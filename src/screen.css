@@ -28,9 +28,9 @@
   --ink: #12160a;
   --danger: #ff6b5b;
   --accent: #ffc94d;
-  --cls-basse: #ff7a59;
+  --cls-populaire: #ff7a59;
   --cls-moyenne: #62c7ff;
-  --cls-riche: #ffc94d;
+  --cls-superieure: #ffc94d;
   position: relative;
   width: 100%;
   height: 100%;
@@ -53,14 +53,14 @@
 .scr p {
   margin: 0;
 }
-.scr [data-cls='basse'] {
-  --cls: var(--cls-basse);
+.scr [data-cls='populaire'] {
+  --cls: var(--cls-populaire);
 }
 .scr [data-cls='moyenne'] {
   --cls: var(--cls-moyenne);
 }
-.scr [data-cls='riche'] {
-  --cls: var(--cls-riche);
+.scr [data-cls='superieure'] {
+  --cls: var(--cls-superieure);
 }
 .scr-eyebrow {
   font-size: 0.85cqw;

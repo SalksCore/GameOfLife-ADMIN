@@ -96,7 +96,7 @@ export function JournalPage() {
               return (
                 <tr key={a.id}>
                   <td className="text-muted nowrap">{fmt.format(new Date(a.createdAt))}</td>
-                  <td className="strong">{a.admin ?? '—'}</td>
+                  <td className="strong">{a.admin ?? (a.action === 'retention.purge' ? 'Automatique' : '—')}</td>
                   <td>
                     <span className={`badge badge-${info.tone}`}>{info.label}</span>
                   </td>

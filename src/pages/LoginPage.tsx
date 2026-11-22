@@ -1,3 +1,4 @@
+import { LegalLinks } from '../components/Legal';
 import { useActionState, useState } from 'react';
 import { Icon } from '../components/ui';
 import { login } from '../lib/api';
@@ -39,6 +40,7 @@ export function LoginPage() {
           </ul>
         </div>
         <p className="login-legal">Accès réservé au personnel autorisé. Toutes les actions sont journalisées.</p>
+        <LegalLinks className="on-dark" />
       </aside>
 
       <main className="login-main">

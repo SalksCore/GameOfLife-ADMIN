@@ -3,7 +3,10 @@ import { Icon, type IconName } from './components/ui';
 import { LiveProvider, useLive } from './lib/admin-socket';
 import { logout } from './lib/api';
 import { useSession } from './lib/session';
+import { LegalSheet } from './components/Legal';
 import { DashboardPage } from './pages/DashboardPage';
+import { DeckPage } from './pages/DeckPage';
+import { ExposePage } from './pages/ExposePage';
 import { GamesPage } from './pages/GamesPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { JournalPage } from './pages/JournalPage';
@@ -22,6 +25,7 @@ const NAV: { title: string; items: { to: string; label: string; icon: IconName }
     items: [
       { to: '/', label: 'Tableau de bord', icon: 'dashboard' },
       { to: '/parties', label: 'Parties', icon: 'games' },
+      { to: '/expose', label: 'Exposé (diapos, cartes)', icon: 'journal' },
       { to: '/statistiques', label: 'Statistiques', icon: 'chart' },
     ],
   },
@@ -38,6 +42,7 @@ const NAV: { title: string; items: { to: string; label: string; icon: IconName }
       { to: '/maintenance', label: 'Maintenance', icon: 'tool' },
       { to: '/parametres', label: 'Paramètres', icon: 'settings' },
       { to: '/journal', label: 'Journal', icon: 'journal' },
+      { to: '/legal', label: 'Légal et RGPD', icon: 'shield' },
     ],
   },
 ];
@@ -102,12 +107,14 @@ function Shell({ username }: { username: string }) {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/parties" element={<GamesPage />} />
             <Route path="/parties/:id" element={<ToRegie />} />
+            <Route path="/expose" element={<ExposePage />} />
             <Route path="/statistiques" element={<StatsPage />} />
             <Route path="/joueurs" element={<PlayersPage />} />
             <Route path="/joueurs/:id" element={<PlayerProfilePage />} />
             <Route path="/historique" element={<HistoryPage />} />
             <Route path="/maintenance" element={<MaintenancePage />} />
             <Route path="/parametres" element={<SettingsPage />} />
+            <Route path="/legal" element={<LegalSheet inline />} />
             <Route path="/journal" element={<JournalPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -136,6 +143,8 @@ export function App() {
           <Route path="/ecran/:id" element={<ProjectorPage />} />
           {/* Gestion d'une partie : page à part, plein écran, sans le menu */}
           <Route path="/regie/:id" element={<RegiePage />} />
+          {/* Stream Deck plein écran (tablette) */}
+          <Route path="/deck/:id" element={<DeckPage />} />
           <Route path="/*" element={<Shell username={user.username} />} />
         </Routes>
       </LiveProvider>

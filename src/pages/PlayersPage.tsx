@@ -30,10 +30,11 @@ const SORTS: Record<Sort, string> = {
   lastLogin: 'Dernière connexion',
 };
 
-/** "Jean Dupont" / "DUPONT Jean" / "Jean;Dupont" -> prénom + nom */
-function parseLine(line: string): { firstName: string; lastName: string } | null {
+/** "Jean Dupont" / "DUPONT Jean" / "Jean;Dupont" -> prénom + nom · "anonyme" -> pseudonyme aléatoire */
+function parseLine(line: string): { firstName: string; lastName: string; anonymous?: boolean } | null {
   const clean = line.trim();
   if (!clean) return null;
+  if (/^(anonyme|\*)$/i.test(clean)) return { firstName: '', lastName: '', anonymous: true };
   const parts = clean.includes(';') || clean.includes(',') || clean.includes('\t')
     ? clean.split(/[;,\t]/).map((s) => s.trim())
     : clean.split(/\s+/);
@@ -57,6 +58,7 @@ export function PlayersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [anonymous, setAnonymous] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export function PlayersPage() {
       const res = await request<{ player: PlayerRow; credentials: { username: string; password: string } }>(
         'POST',
         '/api/admin/players',
-        { firstName: form.get('firstName'), lastName: form.get('lastName') },
+        anonymous ? { anonymous: true } : { firstName: form.get('firstName'), lastName: form.get('lastName') },
       );
       setCreateOpen(false);
       setBulkErrors([]);
@@ -133,7 +135,7 @@ export function PlayersPage() {
       setBulkErrors(
         failed.map((f) => {
           const l = parsedBulk[f.index]!;
-          return `Ligne « ${`${l.firstName} ${l.lastName}`.trim()} » : ${f.error}`;
+          return `Ligne « ${l.anonymous ? 'anonyme' : `${l.firstName} ${l.lastName}`.trim()} » : ${f.error}`;
         }),
       );
       setBulkOpen(false);
@@ -255,7 +257,8 @@ export function PlayersPage() {
                       {p.online && <span className="presence" title="En ligne" />}
                     </span>
                     <span className="strong">
-                      {p.lastName.toUpperCase()} {p.firstName}
+                      {p.anonymous ? `${p.firstName} ${p.lastName}` : `${p.lastName.toUpperCase()} ${p.firstName}`}
+                      {p.anonymous && <span className="anon-badge">anonyme</span>}
                     </span>
                   </div>
                 </td>
@@ -315,17 +318,31 @@ export function PlayersPage() {
         }
       >
         <form id="create-player" className="form-grid two" onSubmit={create}>
-          <label className="form-field">
-            <span>Prénom</span>
-            <input name="firstName" required maxLength={40} autoComplete="off" autoFocus />
+          <label className="anon-toggle span-2">
+            <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
+            <span>
+              <strong>Option anonyme</strong>
+              <small>L’élève ne veut pas que son nom soit enregistré : pseudonyme tiré au hasard (ex. « Renard 42 »), aucun prénom ni nom stocké.</small>
+            </span>
           </label>
-          <label className="form-field">
-            <span>Nom</span>
-            <input name="lastName" required maxLength={40} autoComplete="off" />
-          </label>
+          {!anonymous && (
+            <>
+              <label className="form-field">
+                <span>Prénom</span>
+                <input name="firstName" required maxLength={40} autoComplete="off" autoFocus />
+              </label>
+              <label className="form-field">
+                <span>Nom</span>
+                <input name="lastName" required maxLength={40} autoComplete="off" />
+              </label>
+            </>
+          )}
           <p className="text-muted small span-2">
-            Identifiant : 1re lettre du nom + prénom (Jean Dupont → <code>djean</code>). Mot de passe généré
-            aléatoirement.
+            {anonymous ? (
+              <>Identifiant : le pseudonyme en minuscules (Renard 42 → <code>renard42</code>). Mot de passe généré aléatoirement.</>
+            ) : (
+              <>Identifiant : 1re lettre du nom + prénom (Jean Dupont → <code>djean</code>). Mot de passe généré aléatoirement.</>
+            )}
           </p>
           {formError && <div className="alert alert-error span-2">{formError}</div>}
         </form>
@@ -353,7 +370,8 @@ export function PlayersPage() {
       >
         <p>
           Un joueur par ligne : <code>Prénom Nom</code>, <code>NOM Prénom</code> ou <code>Prénom;Nom</code> (copier-coller
-          depuis un tableur possible). 200 lignes maximum.
+          depuis un tableur possible). Une ligne <code>anonyme</code> crée un compte avec pseudonyme aléatoire (option
+          anonyme). 200 lignes maximum.
         </p>
         <div className="bulk-grid">
           <textarea
@@ -368,9 +386,15 @@ export function PlayersPage() {
             <div className="text-muted small">Aperçu ({parsedBulk.length})</div>
             <ul>
               {parsedBulk.slice(0, 50).map((l, i) => (
-                <li key={i} className={!l.firstName || !l.lastName ? 'invalid' : undefined}>
-                  <span>{l.firstName || '—'}</span>
-                  <strong>{l.lastName || '—'}</strong>
+                <li key={i} className={!l.anonymous && (!l.firstName || !l.lastName) ? 'invalid' : undefined}>
+                  {l.anonymous ? (
+                    <span>🎭 Pseudonyme aléatoire</span>
+                  ) : (
+                    <>
+                      <span>{l.firstName || '—'}</span>
+                      <strong>{l.lastName || '—'}</strong>
+                    </>
+                  )}
                 </li>
               ))}
               {parsedBulk.length > 50 && <li className="text-muted">… et {parsedBulk.length - 50} autre(s)</li>}
