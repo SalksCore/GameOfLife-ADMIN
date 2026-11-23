@@ -29,6 +29,19 @@ export class ApiError extends Error {
 }
 
 const BASE = import.meta.env.VITE_API_URL ?? '';
+const UNREACHABLE = 'Serveur injoignable (redémarrage ou réseau). Réessayez dans quelques secondes.';
+
+/** fetch avec 2 nouveaux essais si le serveur ne répond pas (redémarrage de quelques secondes). */
+async function send(url: string, init: RequestInit): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch {
+      if (attempt >= 2) throw new ApiError(0, UNREACHABLE);
+      await new Promise((r) => setTimeout(r, 1_500 * (attempt + 1)));
+    }
+  }
+}
 // Routes de session propres aux admins (cookie distinct de celui des joueurs)
 const AUTH = '/api/admin/auth';
 const HEADERS = { 'Content-Type': 'application/json', 'X-Requested-With': 'GameOfLife' };
@@ -59,7 +72,7 @@ function readExp(jwt: string): number {
 }
 
 async function post<T>(path: string, body: unknown = {}): Promise<T> {
-  const res = await fetch(BASE + path, {
+  const res = await send(BASE + path, {
     method: 'POST',
     credentials: 'include',
     headers: HEADERS,
@@ -120,7 +133,7 @@ export async function request<T>(method: string, path: string, body?: unknown): 
   for (let attempt = 0; attempt < 2; attempt++) {
     const token = await getAccessToken();
     if (!token) throw new ApiError(401, 'Non authentifié');
-    const res = await fetch(BASE + path, {
+    const res = await send(BASE + path, {
       method,
       credentials: 'include',
       headers:
