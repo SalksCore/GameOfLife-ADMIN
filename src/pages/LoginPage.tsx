@@ -1,5 +1,6 @@
 import { LegalLinks } from '../components/Legal';
 import { useActionState, useState } from 'react';
+import { LifeGrid, Logo } from '../components/Logo';
 import { Icon } from '../components/ui';
 import { login } from '../lib/api';
 
@@ -18,29 +19,34 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <aside className="login-brand">
+        <div className="login-board">
+          <LifeGrid cols={22} rows={10} interval={650} />
+        </div>
         <div className="brand-row">
-          <img src="/icon.svg" alt="" width={40} height={40} />
-          <span>
-            GameOfLife <strong>Admin</strong>
-          </span>
+          <Logo size={40} />
         </div>
         <div className="login-pitch">
-          <h1>Panneau d’administration</h1>
-          <p>Gérez les comptes joueurs, créez les parties et suivez l’activité en temps réel.</p>
+          <span className="eyebrow">Régie de l’exposé</span>
+          <h1>
+            L’école garantit-elle <em>l’égalité des chances</em> ?
+          </h1>
+          <p>Le panneau qui fait tourner la partie : comptes des joueurs, régie en direct, écran projeté et résultats.</p>
           <ul>
             <li>
-              <Icon name="players" size={18} /> Création des comptes joueurs
+              <Icon name="players" size={18} /> Comptes joueurs et fiches à découper
             </li>
             <li>
-              <Icon name="games" size={18} /> Parties et codes d’accès
+              <Icon name="games" size={18} /> Parties, Stream Deck et écran projeté
             </li>
             <li>
-              <Icon name="shield" size={18} /> Modération et journal d’activité
+              <Icon name="key" size={18} /> Équipe admin, journal de chaque action
             </li>
           </ul>
         </div>
-        <p className="login-legal">Accès réservé au personnel autorisé. Toutes les actions sont journalisées.</p>
-        <LegalLinks className="on-dark" />
+        <div>
+          <p className="login-legal">Accès réservé à l’équipe de l’exposé. Toutes les actions sont journalisées.</p>
+          <LegalLinks className="on-dark" />
+        </div>
       </aside>
 
       <main className="login-main">
@@ -49,7 +55,7 @@ export function LoginPage() {
             <Icon name="lock" size={26} />
           </div>
           <h2>Connexion</h2>
-          <p className="text-muted">Identifiez-vous avec votre compte administrateur.</p>
+          <p className="text-muted">Avec le compte admin que l’équipe vous a remis.</p>
 
           <label className="form-field">
             <span>Identifiant</span>

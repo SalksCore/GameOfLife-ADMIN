@@ -21,12 +21,13 @@ interface PageData {
   total: number;
 }
 
-type Filter = '' | 'player' | 'room' | 'settings' | 'maintenance';
+type Filter = '' | 'player' | 'room' | 'admin' | 'settings' | 'maintenance';
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: '', label: 'Tout' },
   { id: 'player', label: 'Joueurs' },
   { id: 'room', label: 'Parties' },
+  { id: 'admin', label: 'Équipe' },
   { id: 'settings', label: 'Paramètres' },
   { id: 'maintenance', label: 'Maintenance' },
 ];

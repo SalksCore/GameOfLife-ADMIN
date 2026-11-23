@@ -74,6 +74,13 @@ export const ACTION_LABELS: Record<string, { label: string; tone: 'ok' | 'info' 
   'expose.update': { label: 'Exposé modifié', tone: 'info' },
   'game.give': { label: 'Argent donné ou retiré', tone: 'info' },
   'game.event': { label: 'Événement collectif', tone: 'info' },
+  'admin.create': { label: 'Admin ajouté', tone: 'ok' },
+  'admin.role': { label: 'Rôle admin modifié', tone: 'info' },
+  'admin.disable': { label: 'Admin désactivé', tone: 'danger' },
+  'admin.enable': { label: 'Admin réactivé', tone: 'ok' },
+  'admin.reset-password': { label: 'Mot de passe admin régénéré', tone: 'warning' },
+  'admin.password': { label: 'Mot de passe changé', tone: 'info' },
+  'admin.delete': { label: 'Admin supprimé', tone: 'danger' },
   'retention.purge': { label: 'Suppression automatique (3 mois)', tone: 'warning' },
 };
 

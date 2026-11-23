@@ -8,7 +8,10 @@
 export interface User {
   id: string;
   username: string;
+  /** owner : gère aussi l'équipe admin */
+  role?: 'owner' | 'admin';
   lastLoginAt: string | null;
+  createdAt?: string;
 }
 
 interface Session {

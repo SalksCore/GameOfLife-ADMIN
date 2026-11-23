@@ -4,6 +4,9 @@ import { LiveProvider, useLive } from './lib/admin-socket';
 import { logout } from './lib/api';
 import { useSession } from './lib/session';
 import { LegalSheet } from './components/Legal';
+import { Logo } from './components/Logo';
+import { AccountPage } from './pages/AccountPage';
+import { TeamPage } from './pages/TeamPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DeckPage } from './pages/DeckPage';
 import { ExposePage } from './pages/ExposePage';
@@ -39,6 +42,7 @@ const NAV: { title: string; items: { to: string; label: string; icon: IconName }
   {
     title: 'Système',
     items: [
+      { to: '/equipe', label: 'Équipe admin', icon: 'key' },
       { to: '/maintenance', label: 'Maintenance', icon: 'tool' },
       { to: '/parametres', label: 'Paramètres', icon: 'settings' },
       { to: '/journal', label: 'Journal', icon: 'journal' },
@@ -47,18 +51,15 @@ const NAV: { title: string; items: { to: string; label: string; icon: IconName }
   },
 ];
 
-function Shell({ username }: { username: string }) {
+function Shell({ username, role }: { username: string; role: 'owner' | 'admin' }) {
   const { online, error, rooms, stats } = useLive();
   const live = rooms.filter((r) => r.phase !== 'ended').length;
 
   return (
     <div className="shell">
       <aside className="sidebar">
-        <Link to="/" className="brand-row">
-          <img src="/icon.svg" alt="" width={34} height={34} />
-          <span>
-            GameOfLife <strong>Admin</strong>
-          </span>
+        <Link to="/" className="brand-row" aria-label="GameOfLife admin, tableau de bord">
+          <Logo size={34} />
         </Link>
 
         <nav>
@@ -78,15 +79,16 @@ function Shell({ username }: { username: string }) {
         </nav>
 
         <div className="sidebar-foot">
-          <div className="me">
-            <div className="me-avatar">{username.charAt(0).toUpperCase()}</div>
+          <NavLink to="/compte" className="me" title="Mon compte">
+            <div className={`me-avatar avatar-${role}`}>{username.slice(0, 2)}</div>
             <div>
               <div className="me-name">{username}</div>
               <div className="me-status">
-                <span className={`dot ${online ? 'on' : 'off'}`} /> {online ? 'Temps réel actif' : 'Hors ligne'}
+                <span className={`dot ${online ? 'on' : 'off'}`} /> {online ? 'En direct' : 'Hors ligne'} ·{' '}
+                {role === 'owner' ? 'Propriétaire' : 'Admin'}
               </div>
             </div>
-          </div>
+          </NavLink>
           <button className="nav-item" onClick={() => void logout()}>
             <Icon name="logout" />
             <span>Déconnexion</span>
@@ -116,6 +118,8 @@ function Shell({ username }: { username: string }) {
             <Route path="/parametres" element={<SettingsPage />} />
             <Route path="/legal" element={<LegalSheet inline />} />
             <Route path="/journal" element={<JournalPage />} />
+            <Route path="/equipe" element={<TeamPage />} />
+            <Route path="/compte" element={<AccountPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -145,7 +149,7 @@ export function App() {
           <Route path="/regie/:id" element={<RegiePage />} />
           {/* Stream Deck plein écran (tablette) */}
           <Route path="/deck/:id" element={<DeckPage />} />
-          <Route path="/*" element={<Shell username={user.username} />} />
+          <Route path="/*" element={<Shell username={user.username} role={user.role ?? 'admin'} />} />
         </Routes>
       </LiveProvider>
     </BrowserRouter>
