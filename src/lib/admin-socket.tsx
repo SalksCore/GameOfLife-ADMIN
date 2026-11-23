@@ -1,7 +1,7 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import type { Ack, AdminClientToServerEvents, AdminRoom, AdminServerToClientEvents, AdminStats } from '../protocol';
-import { getAccessToken, logout, refreshSession } from './api';
+import { getAccessToken, refreshSession } from './api';
 
 export type AdminSocket = Socket<AdminServerToClientEvents, AdminClientToServerEvents>;
 
@@ -45,11 +45,12 @@ export function LiveProvider({ children }: { children: ReactNode }) {
       void loadRooms();
     });
     s.on('disconnect', () => setOnline(false));
-    s.on('connect_error', async () => {
+    s.on('connect_error', async (err) => {
       setOnline(false);
       setError('Connexion temps réel impossible, nouvel essai…');
-      // Token expiré ou révoqué : renouvellement, sinon retour à la connexion
-      if (!(await refreshSession())) void logout();
+      // Token refusé par le serveur : renouvellement. Une session vraiment expirée (401) renvoie à la connexion ;
+      // une API injoignable (redémarrage, réseau) garde la session : le socket se reconnecte seul.
+      if (err.message === 'unauthorized') await refreshSession();
     });
     s.on('admin:stats', setStats);
     s.on('admin:roomsChanged', () => void loadRooms());
