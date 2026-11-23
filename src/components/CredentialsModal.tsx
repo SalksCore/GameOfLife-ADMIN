@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { downloadCredentialsPdf } from '../lib/credentials-pdf';
 import type { Credentials } from '../lib/players';
 import { CopyButton, Icon, Modal } from './ui';
 
@@ -32,6 +34,20 @@ export function CredentialsModal({
   onClose: () => void;
 }) {
   const many = (list?.length ?? 0) > 1;
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  async function pdf() {
+    if (!list) return;
+    setPdfBusy(true);
+    setPdfError(null);
+    try {
+      await downloadCredentialsPdf(list);
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : 'PDF impossible à générer');
+    } finally {
+      setPdfBusy(false);
+    }
+  }
   return (
     <Modal
       open={!!list}
@@ -40,8 +56,8 @@ export function CredentialsModal({
       wide={many}
       footer={
         <>
-          <button className="btn" onClick={() => window.print()}>
-            <Icon name="print" size={16} /> Imprimer
+          <button className="btn btn-primary" onClick={pdf} disabled={pdfBusy}>
+            <Icon name="scissors" size={16} /> {pdfBusy ? 'Génération…' : 'Fiches à découper (PDF)'}
           </button>
           {many && (
             <button className="btn" onClick={() => list && downloadCsv(list)}>
@@ -49,7 +65,7 @@ export function CredentialsModal({
             </button>
           )}
           <CopyButton value={list ? asText(list) : ''} label="Tout copier" />
-          <button className="btn btn-primary" onClick={onClose}>
+          <button className="btn" onClick={onClose}>
             J’ai noté les identifiants
           </button>
         </>
@@ -57,8 +73,9 @@ export function CredentialsModal({
     >
       <div className="alert alert-warning">
         {many ? 'Ces mots de passe ne seront' : 'Ce mot de passe ne sera'} <strong>plus jamais affiché{many && 's'}</strong>.
-        Transmettez-{many ? 'les' : 'le'} maintenant.
+        Transmettez-{many ? 'les' : 'le'} maintenant : le PDF contient une fiche à découper par joueur.
       </div>
+      {pdfError && <div className="alert alert-error">{pdfError}</div>}
       <div className="print-area">
         {many ? (
           <table className="table compact">

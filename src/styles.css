@@ -880,3 +880,33 @@ code,
     display: none;
   }
 }
+
+/* Choix exclusif sous forme de cartes (fiches à découper) */
+.choice-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+.choice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  background: var(--surface);
+}
+.choice:has(input:checked) {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+.choice input {
+  margin-top: 3px;
+  accent-color: var(--blue);
+}
+.choice small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+}

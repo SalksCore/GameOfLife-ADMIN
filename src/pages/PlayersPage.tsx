@@ -65,6 +65,9 @@ export function PlayersPage() {
   const [busy, setBusy] = useState(false);
   const [credentials, setCredentials] = useState<Credentials[] | null>(null);
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+  const [sheetsOpen, setSheetsOpen] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
+  const [sheetsScope, setSheetsScope] = useState<'never' | 'all'>('never');
 
   const update = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params);
@@ -149,6 +152,26 @@ export function PlayersPage() {
     }
   }
 
+  /** Nouveaux mots de passe pour un groupe, puis fiches à découper en PDF */
+  async function makeSheets() {
+    setBusy(true);
+    setFormError(null);
+    try {
+      const res = await request<{ credentials: Credentials[] }>('POST', '/api/admin/players/reset-passwords', { scope: sheetsScope });
+      setSheetsOpen(false);
+      setBulkErrors([]);
+      if (res.credentials.length) {
+        setResetDone(true);
+        setCredentials(res.credentials);
+      } else setFormError('Aucun compte concerné');
+      await load();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Erreur');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
   return (
@@ -158,6 +181,9 @@ export function PlayersPage() {
         subtitle="Comptes créés par l’administration — identifiant et mot de passe générés automatiquement"
         actions={
           <>
+            <button className="btn" onClick={() => { setFormError(null); setSheetsOpen(true); }}>
+              <Icon name="scissors" size={18} /> Fiches à découper
+            </button>
             <button className="btn" onClick={() => { setFormError(null); setBulkOpen(true); }}>
               <Icon name="upload" size={18} /> Création en masse
             </button>
@@ -404,10 +430,60 @@ export function PlayersPage() {
         {formError && <div className="alert alert-error">{formError}</div>}
       </Modal>
 
+      <Modal
+        open={sheetsOpen}
+        title="Fiches à découper"
+        onClose={() => setSheetsOpen(false)}
+        footer={
+          <>
+            <button className="btn" onClick={() => setSheetsOpen(false)}>
+              Annuler
+            </button>
+            <button className="btn btn-primary" onClick={makeSheets} disabled={busy}>
+              <Icon name="key" size={16} /> {busy ? 'Génération…' : 'Générer les mots de passe'}
+            </button>
+          </>
+        }
+      >
+        <p>
+          Les mots de passe ne sont jamais conservés en clair : pour imprimer les fiches, on en génère de{' '}
+          <strong>nouveaux</strong> (8 caractères, sans lettre ambiguë), puis on télécharge le PDF.
+        </p>
+        <div className="choice-list">
+          <label className="choice">
+            <input type="radio" name="scope" checked={sheetsScope === 'never'} onChange={() => setSheetsScope('never')} />
+            <span>
+              <strong>Jamais connectés</strong> ({data?.counts.never ?? '…'})
+              <small>Les comptes qui n’ont pas encore servi. Personne n’est déconnecté.</small>
+            </span>
+          </label>
+          <label className="choice">
+            <input type="radio" name="scope" checked={sheetsScope === 'all'} onChange={() => setSheetsScope('all')} />
+            <span>
+              <strong>Tous les comptes actifs</strong> ({data?.counts.active ?? '…'})
+              <small>Les anciens mots de passe ne marcheront plus et ces joueurs sont déconnectés.</small>
+            </span>
+          </label>
+        </div>
+        {sheetsScope === 'all' && (
+          <div className="alert alert-warning">À ne pas faire pendant une partie : tous les téléphones connectés seront déconnectés.</div>
+        )}
+        {formError && <div className="alert alert-error">{formError}</div>}
+      </Modal>
+
       <CredentialsModal
-        title={credentials && credentials.length > 1 ? `${credentials.length} comptes créés` : 'Compte créé'}
+        title={
+          resetDone
+            ? `${credentials?.length ?? 0} nouveau${(credentials?.length ?? 0) > 1 ? 'x' : ''} mot${(credentials?.length ?? 0) > 1 ? 's' : ''} de passe`
+            : credentials && credentials.length > 1
+              ? `${credentials.length} comptes créés`
+              : 'Compte créé'
+        }
         list={credentials}
-        onClose={() => setCredentials(null)}
+        onClose={() => {
+          setCredentials(null);
+          setResetDone(false);
+        }}
       />
     </>
   );
