@@ -328,7 +328,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
                     ▶ Lancer l’exposé
                   </button>
                   <p className="rg-muted">
-                    {screen.lobby.length} joueur{screen.lobby.length > 1 ? 's' : ''} · 25 étapes · 24:15 prévues
+                    {screen.lobby.length} joueur{screen.lobby.length > 1 ? 's' : ''} · 25 étapes · environ 32 min prévues
                   </p>
                 </div>
               </Dock>

@@ -40,9 +40,9 @@ export const LEGAL: LegalPage[] = [
         rows: [
           ['Éditeur', `Dahrel FAMIBELLE, particulier (développeur à titre personnel). Contact : ${CONTACT}`],
           ['Directeur de la publication', 'Dahrel FAMIBELLE'],
-          ['Hébergement des sites (jeu, admin)', 'Cloudflare, Inc., 101 Townsend Street, San Francisco, CA 94107, États-Unis (service Cloudflare Pages)'],
+          ['Hébergement des sites (jeu, admin)', 'Vercel Inc. [adresse à compléter], États-Unis (fichiers statiques des sites, réseau de diffusion)'],
           ['Hébergement du serveur (API)', 'Oracle Cloud Infrastructure, Oracle Corporation [adresse à compléter], région Marseille, France'],
-          ['Base de données', 'Supabase, Inc. [adresse à compléter], hébergée sur Amazon Web Services, région eu-west-1, Irlande'],
+          ['Base de données', 'PostgreSQL sur le même serveur Oracle Cloud Infrastructure, région Marseille, France'],
           [
             'Propriété intellectuelle',
             'Le code, les textes, les règles du jeu, les illustrations et le logo GameOfLife sont la propriété de Dahrel FAMIBELLE (© 2026). Toute reproduction sans autorisation est interdite. Polices Bricolage Grotesque et DM Sans (licence SIL Open Font License). Les chiffres réels cités appartiennent à leurs sources (Insee, DEPP, France Stratégie, Dares, OVE).',
@@ -109,12 +109,12 @@ export const LEGAL: LegalPage[] = [
         type: 'table',
         head: ['Prestataire', 'Rôle', 'Lieu des serveurs'],
         rows: [
-          ['Cloudflare, Inc.', 'Sites du jeu et de l’admin (fichiers statiques, réseau de diffusion)', 'Réseau mondial ; société aux États-Unis'],
+          ['Vercel Inc.', 'Sites du jeu et de l’admin (fichiers statiques, réseau de diffusion)', 'Réseau mondial ; société aux États-Unis'],
           ['Oracle Cloud Infrastructure', 'Serveur de l’API (temps réel)', 'Marseille, France'],
-          ['Supabase, Inc. (sur AWS)', 'Base de données', 'Irlande (eu-west-1) ; société aux États-Unis'],
+          ['Oracle Cloud Infrastructure', 'Base de données (PostgreSQL), sauvegardée chaque nuit sur le même serveur', 'Marseille, France'],
         ],
       },
-      { type: 'p', text: 'Les données sont stockées dans l’Union européenne (Irlande, France). Cloudflare et Supabase étant des sociétés américaines, un accès depuis les États-Unis reste possible : il est encadré par le cadre de protection des données UE-États-Unis ou par les clauses contractuelles types de la Commission européenne prévues dans leurs conditions.' },
+      { type: 'p', text: 'Les données des joueurs (comptes, connexions, parties) sont stockées en France, sur le serveur Oracle de Marseille. Les sites eux-mêmes sont servis par Vercel, société américaine, qui ne reçoit pas les données des comptes mais voit passer les connexions aux pages : cet accès est encadré par le cadre de protection des données UE-États-Unis ou par les clauses contractuelles types de la Commission européenne prévues dans ses conditions.' },
       { type: 'h', text: '9 · Sécurité' },
       {
         type: 'list',
