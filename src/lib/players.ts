@@ -8,6 +8,8 @@ export interface PlayerRow {
   displayName: string;
   /** Option anonyme : pseudonyme aléatoire, aucun nom réel */
   anonymous?: boolean;
+  /** Code binôme imprimé sur sa fiche */
+  pairCode?: string | null;
   gamesPlayed: number;
   createdAt: string;
   updatedAt: string;
@@ -38,7 +40,12 @@ export interface Credentials {
   lastName: string;
   username: string;
   password: string;
+  /** Code binôme imprimé sur la fiche (6 caractères) */
+  pairCode?: string | null;
 }
+
+/** « K7M4PZ » -> « K7M-4PZ » */
+export const formatPairCode = (code: string | null | undefined) => (code ? `${code.slice(0, 3)}-${code.slice(3)}` : '—');
 
 export const playersApi = {
   get: (id: string) => request<PlayerProfile>('GET', `/api/admin/players/${id}`),

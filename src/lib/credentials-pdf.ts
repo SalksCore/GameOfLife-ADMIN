@@ -1,6 +1,6 @@
 import type { jsPDF as JsPDF } from 'jspdf';
 import QRCode from 'qrcode';
-import type { Credentials } from './players';
+import { formatPairCode, type Credentials } from './players';
 import { phoneHost, phoneUrl } from './phone-url';
 
 /**
@@ -38,6 +38,13 @@ const PAD = 5;
 
 /** k7mxp4rz -> « k7mx p4rz » : deux groupes lisibles, la connexion ignore l'espace */
 const grouped = (pw: string) => (/^[a-z0-9]{8}$/.test(pw) ? `${pw.slice(0, 4)}  ${pw.slice(4)}` : pw);
+
+/** Lien du QR : ouvre l'application et connecte directement ce compte (fragment # jamais envoyé au serveur) */
+function loginUrl(base: string, c: Credentials) {
+  const bytes = new TextEncoder().encode([c.username, c.password].join(String.fromCharCode(10)));
+  const b64 = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${base}/#login=${b64}`;
+}
 
 const fullName = (c: Credentials) => `${c.firstName} ${c.lastName}`.trim() || c.username;
 
@@ -112,9 +119,10 @@ function coverPage(doc: JsPDF, list: Credentials[], date: string) {
   doc.text('Mode d’emploi', 16, y);
   const steps = [
     'Imprimez les pages suivantes et découpez le long des pointillés : une fiche par élève.',
-    `Chaque élève ouvre ${phoneHost()} (ou scanne le QR code de sa fiche) et tape ses identifiants.`,
-    'Le mot de passe se tape en minuscules, avec ou sans l’espace du milieu.',
-    'Ces mots de passe ne sont plus affichés nulle part : gardez cette page, ou détruisez-la après la séance.',
+    'Chaque élève scanne le QR code de sa fiche : il est connecté directement à son compte.',
+    `Sans QR : ouvrir ${phoneHost()} et taper l’identifiant et le mot de passe (minuscules, espace facultatif).`,
+    'Binôme : si un téléphone n’a plus de batterie, son partenaire tape le code binôme de la fiche dans la salle d’attente.',
+    'Le QR et le mot de passe donnent accès au compte : ne pas les partager. Cette page n’est affichée nulle part ailleurs.',
   ];
   doc.setFontSize(9.2);
   y += 7;
@@ -143,14 +151,14 @@ function coverPage(doc: JsPDF, list: Credentials[], date: string) {
   doc.text(`Générée le ${date}`, PAGE_W - 16, y, { align: 'right' });
   y += 4;
 
-  const colX = [16, 26, 104, 150];
+  const colX = [16, 26, 90, 128, 164];
   const header = () => {
     doc.setFillColor(...INK);
     doc.rect(16, y, PAGE_W - 32, 7, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.6);
     doc.setTextColor(255, 255, 255);
-    ['#', 'Nom', 'Identifiant', 'Mot de passe'].forEach((h, i) => doc.text(h, colX[i]! + 2.5, y + 4.7));
+    ['#', 'Nom', 'Identifiant', 'Mot de passe', 'Code binôme'].forEach((h, i) => doc.text(h, colX[i]! + 2.5, y + 4.7));
     y += 7;
   };
   header();
@@ -169,11 +177,12 @@ function coverPage(doc: JsPDF, list: Credentials[], date: string) {
     doc.setTextColor(...MUTED);
     doc.text(String(i + 1), colX[0]! + 2.5, y + 4.4);
     doc.setTextColor(...INK);
-    doc.text(fit(doc, c.lastName ? `${c.lastName.toUpperCase()} ${c.firstName}` : fullName(c), 74), colX[1]! + 2.5, y + 4.4);
+    doc.text(fit(doc, c.lastName ? `${c.lastName.toUpperCase()} ${c.firstName}` : fullName(c), 60), colX[1]! + 2.5, y + 4.4);
     doc.setFont('courier', 'bold');
     doc.setFontSize(9);
-    doc.text(fit(doc, c.username, 42), colX[2]! + 2.5, y + 4.4);
+    doc.text(fit(doc, c.username, 34), colX[2]! + 2.5, y + 4.4);
     doc.text(grouped(c.password), colX[3]! + 2.5, y + 4.4);
+    doc.text(formatPairCode(c.pairCode), colX[4]! + 2.5, y + 4.4);
     y += 6.4;
   });
   doc.setDrawColor(...LINE);
@@ -182,6 +191,7 @@ function coverPage(doc: JsPDF, list: Credentials[], date: string) {
 }
 
 function card(doc: JsPDF, c: Credentials, x: number, y: number, qr: string, host: string) {
+  // qr : QR personnel de connexion de ce joueur
   const ix = x + PAD;
   const iw = CARD_W - 2 * PAD;
 
@@ -197,16 +207,25 @@ function card(doc: JsPDF, c: Credentials, x: number, y: number, qr: string, host
   doc.setTextColor(...INK);
   doc.text(fit(doc, fullName(c), iw - qrSize - 3), ix, y + PAD + 14.5);
 
-  // Identifiant
+  // Sous le QR : à quoi il sert
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(5.6);
+  doc.setTextColor(...MUTED);
+  doc.text('Scanne : connexion directe', x + CARD_W - PAD - qrSize / 2, y + PAD + qrSize + 2.6, { align: 'center' });
+
+  // Identifiant et code binôme, côte à côte
   const fy = y + PAD + 21;
+  const codeX = ix + 33;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.6);
   doc.setTextColor(...MUTED);
   doc.text('IDENTIFIANT', ix, fy);
+  doc.text('CODE BINÔME', codeX, fy);
   doc.setFont('courier', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(12);
   doc.setTextColor(...INK);
-  doc.text(fit(doc, c.username, iw - qrSize - 3), ix, fy + 5.4);
+  doc.text(fit(doc, c.username, codeX - ix - 2), ix, fy + 5.2);
+  doc.text(formatPairCode(c.pairCode), codeX, fy + 5.2);
 
   // Mot de passe, sur pastille vert clair
   const py = fy + 9.3;
@@ -259,7 +278,6 @@ export async function downloadCredentialsPdf(list: Credentials[]): Promise<void>
   const date = now.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const url = phoneUrl();
   const host = phoneHost();
-  const qr = await qrDataUrl(url);
 
   doc.setProperties({ title: 'GameOfLife · identifiants des joueurs', subject: 'Fiches à découper', creator: 'GameOfLife ADMIN' });
   coverPage(doc, list, date);
@@ -268,10 +286,13 @@ export async function downloadCredentialsPdf(list: Credentials[]): Promise<void>
   for (let i = 0; i < list.length; i += perPage) {
     doc.addPage();
     cutLines(doc);
-    list.slice(i, i + perPage).forEach((c, k) => {
+    const page = list.slice(i, i + perPage);
+    // Un QR par joueur : il ouvre l'application déjà connectée à son compte
+    const qrs = await Promise.all(page.map((c) => qrDataUrl(loginUrl(url, c))));
+    page.forEach((c, k) => {
       const col = k % COLS;
       const row = Math.floor(k / COLS);
-      card(doc, c, MARGIN_X + col * CARD_W, MARGIN_Y + row * CARD_H, qr, host);
+      card(doc, c, MARGIN_X + col * CARD_W, MARGIN_Y + row * CARD_H, qrs[k]!, host);
     });
   }
 

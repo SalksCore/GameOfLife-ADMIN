@@ -110,7 +110,7 @@ export function PlayersPage() {
     setBusy(true);
     setFormError(null);
     try {
-      const res = await request<{ player: PlayerRow; credentials: { username: string; password: string } }>(
+      const res = await request<{ player: PlayerRow; credentials: { username: string; password: string; pairCode?: string } }>(
         'POST',
         '/api/admin/players',
         anonymous ? { anonymous: true } : { firstName: form.get('firstName'), lastName: form.get('lastName') },

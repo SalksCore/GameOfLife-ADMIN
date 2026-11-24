@@ -6,6 +6,7 @@ import { ApiError } from '../lib/api';
 import {
   ACTION_LABELS,
   describeDevice,
+  formatPairCode,
   playersApi,
   relativeTime,
   type Credentials,
@@ -230,6 +231,10 @@ export function PlayerProfilePage() {
               <dt>Identifiant</dt>
               <dd>
                 <code className="code">{p.username}</code>
+              </dd>
+              <dt>Code binôme</dt>
+              <dd>
+                <code className="code">{formatPairCode(p.pairCode)}</code>
               </dd>
               <dt>Nom en jeu</dt>
               <dd>{p.displayName}</dd>

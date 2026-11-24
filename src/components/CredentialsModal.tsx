@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { downloadCredentialsPdf } from '../lib/credentials-pdf';
-import type { Credentials } from '../lib/players';
+import { formatPairCode, type Credentials } from '../lib/players';
 import { CopyButton, Icon, Modal } from './ui';
 
 const asText = (list: Credentials[]) =>
-  list.map((c) => `${c.firstName} ${c.lastName}\nIdentifiant : ${c.username}\nMot de passe : ${c.password}`).join('\n\n');
+  list.map((c) => `${c.firstName} ${c.lastName}\nIdentifiant : ${c.username}\nMot de passe : ${c.password}\nCode binôme : ${formatPairCode(c.pairCode)}`).join('\n\n');
 
 const asCsv = (list: Credentials[]) =>
   [
-    'prenom;nom;identifiant;mot_de_passe',
-    ...list.map((c) => [c.firstName, c.lastName, c.username, c.password].map((v) => `"${v.replace(/"/g, '""')}"`).join(';')),
+    'prenom;nom;identifiant;mot_de_passe;code_binome',
+    ...list.map((c) => [c.firstName, c.lastName, c.username, c.password, formatPairCode(c.pairCode)].map((v) => `"${v.replace(/"/g, '""')}"`).join(';')),
   ].join('\r\n');
 
 function downloadCsv(list: Credentials[]) {
@@ -84,6 +84,7 @@ export function CredentialsModal({
                 <th>Nom</th>
                 <th>Identifiant</th>
                 <th>Mot de passe</th>
+                <th>Code binôme</th>
               </tr>
             </thead>
             <tbody>
@@ -97,6 +98,9 @@ export function CredentialsModal({
                   </td>
                   <td>
                     <code className="code">{c.password}</code>
+                  </td>
+                  <td>
+                    <code className="code">{formatPairCode(c.pairCode)}</code>
                   </td>
                 </tr>
               ))}
@@ -117,6 +121,11 @@ export function CredentialsModal({
                 <span>Mot de passe</span>
                 <code>{list[0].password}</code>
                 <CopyButton value={list[0].password} />
+              </div>
+              <div className="cred-row">
+                <span>Code binôme</span>
+                <code>{formatPairCode(list[0].pairCode)}</code>
+                <span />
               </div>
             </div>
           )
