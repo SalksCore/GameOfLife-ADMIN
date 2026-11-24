@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 import { Screen, Token } from '../components/screen/Screen';
+import { LiveStats, useLiveHistory } from '../components/LiveStats';
+import { PlayerEditor } from '../components/PlayerEditor';
 import { StreamDeck, useDeckPages } from '../components/StreamDeck';
 import { useConfirm } from '../components/ui';
 import { useLive } from '../lib/admin-socket';
@@ -87,6 +89,11 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
   const [selected, setSelected] = useState<string | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; playerId: string } | null>(null);
   const [cardSel, setCardSel] = useState(0);
+  const [sideTab, setSideTab] = useState<'deck' | 'player' | 'stats'>('deck');
+  const [editId, setEditId] = useState<string | null>(null);
+  // Touches affichées ici même si une tablette est branchée
+  const [keysHere, setKeysHere] = useState(false);
+  const history = useLiveHistory(live);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
@@ -120,6 +127,10 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
     onProjector: () => openProjector(roomId),
     onExport: () => void exportGame(),
     onEnd: () => void end(),
+    onEditPlayer: (id) => {
+      setEditId(id);
+      setSideTab('player');
+    },
     notify: (t) => notify(t),
     onError: setError,
   });
@@ -162,6 +173,14 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
   });
   const drawn = control.characters.length > 0;
   const selectedRow = rows.find((r) => r.id === selected) ?? null;
+  const editChar = control.characters.find((c) => c.id === editId) ?? null;
+  // Mode Stream Deck : une tablette pilote, la colonne de droite montre les stats et l'éditeur
+  const tablet = (live.decks ?? 0) > 0 && !keysHere;
+  const tab = tablet && sideTab === 'deck' ? 'stats' : sideTab;
+  const pick = (id: string) => {
+    setEditId(id);
+    setSideTab('player');
+  };
 
   async function kick(row: Row) {
     if (await confirm('Retirer le joueur', <p>Retirer {row.displayName} de la partie ? (dernier recours)</p>, true)) {
@@ -250,7 +269,18 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
               {drawn && <ClassSplit chars={control.characters} />}
               <ul className="rg-list">
                 {rows.map((r) => (
-                  <li key={r.id} className={`${selected === r.id ? 'sel' : ''}${r.connected ? '' : ' away'}`} onClick={() => setSelected(r.id)} onContextMenu={(e) => openMenu(e, r.id)}>
+                  <li
+                    key={r.id}
+                    className={`${selected === r.id ? 'sel' : ''}${r.connected ? '' : ' away'}`}
+                    onClick={() => {
+                      setSelected(r.id);
+                      if (r.char) {
+                        setEditId(r.char.id);
+                        if (tab === 'player' || tablet) setSideTab('player');
+                      }
+                    }}
+                    onContextMenu={(e) => openMenu(e, r.id)}
+                  >
                     <Token avatar={r.avatar} color={r.color} dim={!r.connected} />
                     <span className="rg-name">
                       {r.displayName}
@@ -337,9 +367,62 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
           ) : (
             <>
               {control.reform && <p className="rg-reform">Réforme adoptée : {control.reform}</p>}
-              <Dock title="Stream Deck" className="rg-deckdock" hint="ou au clavier" badge={<button className="rg-btn small" onClick={() => openDeck(roomId)}>Tablette ↗</button>}>
-                <StreamDeck pages={deckPages} />
-              </Dock>
+              {(live.decks ?? 0) > 0 && (
+                <div className="rg-tablet">
+                  <span>🎛 Stream Deck sur la tablette{(live.decks ?? 0) > 1 ? ` (${live.decks})` : ''}</span>
+                  <button className="rg-btn small" onClick={() => setKeysHere((v) => !v)}>
+                    {keysHere ? 'Masquer les touches' : 'Touches ici aussi'}
+                  </button>
+                </div>
+              )}
+              <div className="rg-tabs" role="tablist">
+                {!tablet && (
+                  <button role="tab" aria-selected={tab === 'deck'} onClick={() => setSideTab('deck')}>
+                    🎛 Stream Deck
+                  </button>
+                )}
+                <button role="tab" aria-selected={tab === 'stats'} onClick={() => setSideTab('stats')}>
+                  📈 Stats en direct
+                </button>
+                <button role="tab" aria-selected={tab === 'player'} onClick={() => setSideTab('player')}>
+                  ✏️ Joueur{editChar ? ` · ${editChar.members[0]}` : ''}
+                </button>
+              </div>
+              {tab === 'deck' && (
+                <Dock title={`Stream Deck · ${deckPages.reduce((n, p) => n + p.keys.length, 0)} touches`} className="rg-deckdock" hint="ou au clavier" badge={<button className="rg-btn small" onClick={() => openDeck(roomId)}>Tablette ↗</button>}>
+                  <StreamDeck pages={deckPages} cols={5} />
+                </Dock>
+              )}
+              {tab === 'stats' && (
+                <Dock title="Statistiques en direct" className="rg-deckdock" badge={<span className="rg-live">LIVE</span>}>
+                  <LiveStats live={live} history={history} onPick={pick} />
+                </Dock>
+              )}
+              {tab === 'player' && (
+                <Dock title="Modifier un joueur" className="rg-deckdock">
+                  {!drawn ? (
+                    <p className="rg-muted rg-pad">Disponible après le tirage des familles.</p>
+                  ) : (
+                    <>
+                      <div className="rg-pad">
+                        <select value={editChar?.id ?? ''} onChange={(e) => setEditId(e.target.value || null)} aria-label="Joueur à modifier">
+                          <option value="">Choisir un joueur…</option>
+                          {control.characters.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.members.join(' & ')} · {CLASS_SHORT[c.origin]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {editChar ? (
+                        <PlayerEditor char={editChar} roomId={roomId} onDone={notify} />
+                      ) : (
+                        <p className="rg-muted rg-pad">Cliquez sur un joueur (liste de gauche, stats ou touche du Stream Deck).</p>
+                      )}
+                    </>
+                  )}
+                </Dock>
+              )}
             </>
           )}
         </aside>

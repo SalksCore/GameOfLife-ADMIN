@@ -6,7 +6,8 @@ import { useLive } from './admin-socket';
  * Suit une partie en temps réel (écran projeté + régie).
  * S'abonne à chaque (re)connexion et se désabonne en quittant la page.
  */
-export function useLiveRoom(roomId: string | undefined) {
+export function useLiveRoom(roomId: string | undefined, opts: { deck?: boolean } = {}) {
+  const asDeck = !!opts.deck;
   const { socket, online } = useLive();
   const [live, setLive] = useState<LiveRoom | null>(null);
   const [offset, setOffset] = useState(0);
@@ -22,7 +23,7 @@ export function useLiveRoom(roomId: string | undefined) {
     socket.on('admin:live', onLive);
     socket
       .timeout(5_000)
-      .emitWithAck('admin:watch', { roomId })
+      .emitWithAck('admin:watch', { roomId, deck: asDeck })
       .then((res) => {
         if (res.ok) {
           setMissing(false);
@@ -34,7 +35,7 @@ export function useLiveRoom(roomId: string | undefined) {
       socket.off('admin:live', onLive);
       if (socket.connected) socket.emit('admin:unwatch', { roomId }, () => {});
     };
-  }, [socket, roomId, online]);
+  }, [socket, roomId, online, asDeck]);
 
   return { live, offset, missing };
 }

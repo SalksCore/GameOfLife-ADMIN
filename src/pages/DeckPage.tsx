@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
+import { PlayerEditor } from '../components/PlayerEditor';
 import { StreamDeck, useDeckPages } from '../components/StreamDeck';
 import { useLive } from '../lib/admin-socket';
 import { useLiveRoom } from '../lib/live-room';
@@ -11,7 +12,8 @@ export const openDeck = (roomId: string) => window.open(`/deck/${roomId}`, `gol-
 /** Stream Deck plein écran : télécommande tactile de la régie */
 export function DeckPage() {
   const { id } = useParams();
-  const { live, offset, missing } = useLiveRoom(id);
+  // deck : la régie sait qu'une tablette pilote et remplace ses touches par les stats
+  const { live, offset, missing } = useLiveRoom(id, { deck: true });
   if (missing)
     return (
       <div className="rg-empty">
@@ -38,7 +40,9 @@ function Deck({ live, offset }: { live: LiveRoom; offset: number }) {
     }, 2_500);
     return () => clearTimeout(t);
   }, [toast, error]);
-  const pages = useDeckPages(live, offset, { notify: setToast, onError: setError });
+  const [editId, setEditId] = useState<string | null>(null);
+  const pages = useDeckPages(live, offset, { notify: setToast, onError: setError, onEditPlayer: setEditId });
+  const editChar = live.control.characters.find((c) => c.id === editId) ?? null;
   const step = live.control.deck[live.control.cursor];
   const cols = typeof window !== 'undefined' && window.innerWidth < 700 ? 3 : 5;
   return (
@@ -51,6 +55,24 @@ function Deck({ live, offset }: { live: LiveRoom; offset: number }) {
         {error && <span className="sd-err">{error}</span>}
       </header>
       <StreamDeck pages={pages} cols={cols} big />
+      {editChar && (
+        <div className="sd-sheet" onClick={(e) => e.target === e.currentTarget && setEditId(null)}>
+          <div className="sd-sheet-card">
+            <button className="sd-sheet-close" onClick={() => setEditId(null)} aria-label="Fermer">
+              ✕
+            </button>
+            <PlayerEditor
+              char={editChar}
+              roomId={live.roomId}
+              big
+              onDone={(m) => {
+                setToast(m);
+                setEditId(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

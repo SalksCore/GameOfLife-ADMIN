@@ -29,7 +29,7 @@ export interface DeckPage {
 const money = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
 
 /** Touches de la régie, construites depuis l'état en direct de la partie */
-export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector?: () => void; onExport?: () => void; onEnd?: () => void; notify?: (t: string) => void; onError?: (e: string) => void }): DeckPage[] {
+export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector?: () => void; onExport?: () => void; onEnd?: () => void; onEditPlayer?: (characterId: string) => void; notify?: (t: string) => void; onError?: (e: string) => void }): DeckPage[] {
   const { call } = useLive();
   const { screen, control } = live;
   const roomId = screen.roomId;
@@ -107,22 +107,27 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
     },
   ];
 
-  const eventKeys: DeckKey[] = [
-    ...(control.events.length
-      ? control.events.map((ev) => ({
-          id: `ev-${ev.id}`,
-          icon: ev.emoji,
-          label: ev.label,
-          tone: 'event' as const,
-          disabled: !drawn,
-          onPress: () => void run('admin:event', { roomId, eventId: ev.id }, `${ev.emoji} ${ev.label}`),
-        }))
-      : [
-          { id: 'ev-crise', icon: '📉', label: 'Crise', tone: 'event' as const, disabled: true },
-          { id: 'ev-heritage', icon: '🏰', label: 'Héritage', tone: 'event' as const, disabled: true },
-          { id: 'ev-merite', icon: '🏅', label: 'Bourse au mérite', tone: 'event' as const, disabled: true },
-        ]),
-  ];
+  const eventKeys: DeckKey[] = control.events.map((ev) => ({
+    id: `ev-${ev.id}`,
+    icon: ev.emoji,
+    label: ev.label,
+    sub: ev.description,
+    tone: 'event' as const,
+    disabled: !drawn,
+    onPress: () => void run('admin:event', { roomId, eventId: ev.id }, `${ev.emoji} ${ev.label}`),
+  }));
+
+  // Une touche par joueur : ouvre l'éditeur (argent, moyenne, contacts, énergie, statuts…)
+  const playerKeys: DeckKey[] = control.characters.map((c) => ({
+    id: `p-${c.id}`,
+    icon: c.grade.toFixed(1).replace('.', ','),
+    label: c.members.join(' & '),
+    sub: `${money.format(c.budget)} € · ${CLASS_SHORT[c.origin]}`,
+    tone: c.done ? ('go' as const) : ('info' as const),
+    active: c.done,
+    disabled: !opts.onEditPlayer,
+    onPress: () => opts.onEditPlayer?.(c.id),
+  }));
 
   const endKeys: DeckKey[] = [
     { id: 'export', icon: '⬇', label: 'Exporter CSV', tone: 'info', disabled: !drawn || !opts.onExport, onPress: opts.onExport },
@@ -137,13 +142,24 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
   ];
 
   const moneyKeys: DeckKey[] = [
-    { id: 'm-all+1', icon: '+1 k', label: 'Tout le monde', tone: 'money', disabled: !drawn, onPress: () => give('all', 1_000, 'tout le monde') },
-    { id: 'm-all+5', icon: '+5 k', label: 'Tout le monde', tone: 'money', disabled: !drawn, onPress: () => give('all', 5_000, 'tout le monde') },
-    { id: 'm-all-1', icon: '−1 k', label: 'Tout le monde', tone: 'danger', disabled: !drawn, onPress: () => give('all', -1_000, 'tout le monde') },
-    ...SOCIAL_CLASSES.flatMap((c): DeckKey[] => [
-      { id: `m-${c}+2`, icon: '+2 k', label: `Origine ${CLASS_SHORT[c].toLowerCase()}`, tone: 'money' as const, disabled: !drawn, onPress: () => give(`class:${c}`, 2_000, CLASS_SHORT[c].toLowerCase()) },
-      { id: `m-${c}-2`, icon: '−2 k', label: `Origine ${CLASS_SHORT[c].toLowerCase()}`, tone: 'danger' as const, disabled: !drawn, onPress: () => give(`class:${c}`, -2_000, CLASS_SHORT[c].toLowerCase()) },
-    ]),
+    ...([1_000, 5_000, 10_000, -1_000, -5_000] as const).map((n): DeckKey => ({
+      id: `m-all${n}`,
+      icon: `${n > 0 ? '+' : '−'}${Math.abs(n) / 1000} k`,
+      label: 'Tout le monde',
+      tone: n > 0 ? 'money' : 'danger',
+      disabled: !drawn,
+      onPress: () => give('all', n, 'tout le monde'),
+    })),
+    ...SOCIAL_CLASSES.flatMap((c): DeckKey[] =>
+      ([2_000, 5_000, -2_000] as const).map((n) => ({
+        id: `m-${c}${n}`,
+        icon: `${n > 0 ? '+' : '−'}${Math.abs(n) / 1000} k`,
+        label: `Origine ${CLASS_SHORT[c].toLowerCase()}`,
+        tone: n > 0 ? ('money' as const) : ('danger' as const),
+        disabled: !drawn,
+        onPress: () => give(`class:${c}`, n, CLASS_SHORT[c].toLowerCase()),
+      })),
+    ),
   ];
 
   const stepKeys: DeckKey[] = control.deck.map((s, i) => ({
@@ -159,9 +175,10 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
 
   return [
     { id: 'direct', label: 'Pilotage', icon: '🎛', keys: direct },
-    { id: 'cards', label: 'Le saviez-vous ?', icon: '🃏', keys: cardKeys },
-    { id: 'events', label: 'Événements', icon: '⚡', keys: eventKeys },
+    { id: 'events', label: `Événements · ${eventKeys.length}`, icon: '⚡', keys: eventKeys },
     { id: 'money', label: 'Argent', icon: '💶', keys: moneyKeys },
+    { id: 'players', label: 'Joueurs · modifier', icon: '✏️', keys: playerKeys },
+    { id: 'cards', label: 'Le saviez-vous ?', icon: '🃏', keys: cardKeys },
     { id: 'end', label: 'Fin de l’exposé', icon: '🏁', keys: endKeys },
     { id: 'steps', label: 'Déroulé', icon: '🗺', keys: stepKeys },
   ];

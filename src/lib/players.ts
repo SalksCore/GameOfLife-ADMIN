@@ -81,6 +81,7 @@ export const ACTION_LABELS: Record<string, { label: string; tone: 'ok' | 'info' 
   'expose.update': { label: 'Exposé modifié', tone: 'info' },
   'game.give': { label: 'Argent donné ou retiré', tone: 'info' },
   'game.event': { label: 'Événement collectif', tone: 'info' },
+  'game.edit': { label: 'Joueur modifié en direct', tone: 'warning' },
   'admin.create': { label: 'Admin ajouté', tone: 'ok' },
   'admin.role': { label: 'Rôle admin modifié', tone: 'info' },
   'admin.disable': { label: 'Admin désactivé', tone: 'danger' },
