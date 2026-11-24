@@ -885,3 +885,8 @@
 .sd-sheet-card .pe { padding: 18px; }
 .sd-sheet-card .pe-head { padding-right: 46px; }
 .sd-sheet-card select, .sd-sheet-card input[type='number'] { width: 100%; height: 42px; padding: 0 10px; border-radius: 10px; border: 1px solid #34363c; background: #18191c; color: #e4e6eb; font: inherit; }
+
+/* Icônes de contenu (Phosphor) */
+.rg-up-emoji { display: inline-grid; place-items: center; color: var(--accent, #ffc94d); }
+.sd-icon { display: grid; place-items: center; }
+.phone-icon { display: grid; place-items: center; font-size: 40px; }

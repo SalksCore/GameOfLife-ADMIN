@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
+import { GameIcon } from '../components/GameIcon';
 import { Screen, Token } from '../components/screen/Screen';
 import { LiveStats, useLiveHistory } from '../components/LiveStats';
 import { PlayerEditor } from '../components/PlayerEditor';
@@ -284,7 +285,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
                     <Token avatar={r.avatar} color={r.color} dim={!r.connected} />
                     <span className="rg-name">
                       {r.displayName}
-                      {r.partner && <small className="rg-pair"> 🤝 {nameOf(r.partner)}</small>}
+                      {r.partner && <small className="rg-pair"> <GameIcon name="handshake" /> {nameOf(r.partner)}</small>}
                     </span>
                     {r.char ? (
                       <>
@@ -296,7 +297,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
                       </>
                     ) : (
                       <span className="rg-cls" data-cls={r.role ?? undefined}>
-                        {r.role ? CLASS_SHORT[r.role] : '🎲'}
+                        {r.role ? CLASS_SHORT[r.role] : <GameIcon name="dice" />}
                       </span>
                     )}
                     <button className="rg-more" onClick={(e) => openMenu(e, r.id)} aria-label={`Actions pour ${r.displayName}`}>
@@ -355,7 +356,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
               <Dock title="Lancement">
                 <div className="rg-pad rg-stack">
                   <button className="rg-btn big go" disabled={!screen.lobby.length} onClick={() => void start()}>
-                    ▶ Lancer l’exposé
+                    <GameIcon name="play" /> Lancer l’exposé
                   </button>
                   <p className="rg-muted">
                     {screen.lobby.length} joueur{screen.lobby.length > 1 ? 's' : ''} · 25 étapes · environ 32 min prévues
@@ -369,7 +370,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
               {control.reform && <p className="rg-reform">Réforme adoptée : {control.reform}</p>}
               {(live.decks ?? 0) > 0 && (
                 <div className="rg-tablet">
-                  <span>🎛 Stream Deck sur la tablette{(live.decks ?? 0) > 1 ? ` (${live.decks})` : ''}</span>
+                  <span><GameIcon name="sliders" /> Stream Deck sur la tablette{(live.decks ?? 0) > 1 ? ` (${live.decks})` : ''}</span>
                   <button className="rg-btn small" onClick={() => setKeysHere((v) => !v)}>
                     {keysHere ? 'Masquer les touches' : 'Touches ici aussi'}
                   </button>
@@ -378,14 +379,14 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
               <div className="rg-tabs" role="tablist">
                 {!tablet && (
                   <button role="tab" aria-selected={tab === 'deck'} onClick={() => setSideTab('deck')}>
-                    🎛 Stream Deck
+                    <GameIcon name="sliders" /> Stream Deck
                   </button>
                 )}
                 <button role="tab" aria-selected={tab === 'stats'} onClick={() => setSideTab('stats')}>
-                  📈 Stats en direct
+                  <GameIcon name="trend-up" /> Stats en direct
                 </button>
                 <button role="tab" aria-selected={tab === 'player'} onClick={() => setSideTab('player')}>
-                  ✏️ Joueur{editChar ? ` · ${editChar.members[0]}` : ''}
+                  <GameIcon name="pencil" /> Joueur{editChar ? ` · ${editChar.members[0]}` : ''}
                 </button>
               </div>
               {tab === 'deck' && (
@@ -650,7 +651,7 @@ function PlayerMenu({
         <>
           <div className="rg-menu-label">Famille au tirage</div>
           <button role="menuitemradio" aria-checked={!row.role} onClick={act(() => onRole(null))}>
-            🎲 Tirage au sort {!row.role && '✓'}
+            <GameIcon name="dice" /> Tirage au sort {!row.role && '✓'}
           </button>
           {SOCIAL_CLASSES.map((c) => (
             <button key={c} role="menuitemradio" aria-checked={row.role === c} data-cls={c} className="rg-menu-cls" onClick={act(() => onRole(c))}>
@@ -665,7 +666,7 @@ function PlayerMenu({
           <div className="rg-menu-label">Binôme</div>
           {row.partner ? (
             <button role="menuitem" onClick={act(() => onPair(null))}>
-              ✂️ Défaire le binôme
+              <GameIcon name="scissors" /> Défaire le binôme
             </button>
           ) : pairing ? (
             <div className="rg-menu-scroll">
@@ -673,13 +674,13 @@ function PlayerMenu({
                 .filter((r) => r.id !== row.id && !r.partner)
                 .map((r) => (
                   <button key={r.id} role="menuitem" onClick={act(() => onPair(r.id))}>
-                    🤝 avec {r.displayName}
+                    <GameIcon name="handshake" /> avec {r.displayName}
                   </button>
                 ))}
             </div>
           ) : (
             <button role="menuitem" onClick={() => setPairing(true)}>
-              🤝 Former un binôme…
+              <GameIcon name="handshake" /> Former un binôme…
             </button>
           )}
           <hr />
@@ -690,11 +691,11 @@ function PlayerMenu({
           <div className="rg-menu-label">Argent</div>
           {[1_000, 5_000].map((v) => (
             <button key={v} role="menuitem" onClick={act(() => onGive(v, row.displayName))}>
-              💶 Donner {money.format(v)}
+              <GameIcon name="money" /> Donner {money.format(v)}
             </button>
           ))}
           <button role="menuitem" onClick={act(() => onGive(-1_000, row.displayName))}>
-            💸 Retirer {money.format(1_000)}
+            <GameIcon name="wallet" /> Retirer {money.format(1_000)}
           </button>
           {custom ? (
             <form className="rg-menu-form" onSubmit={submit}>
@@ -703,7 +704,7 @@ function PlayerMenu({
             </form>
           ) : (
             <button role="menuitem" onClick={() => setCustom(true)}>
-              ✏️ Montant personnalisé…
+              <GameIcon name="pencil" /> Montant personnalisé…
             </button>
           )}
           <hr />

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { GameIcon } from './GameIcon';
 import { CLASS_SHORT, SOCIAL_CLASSES, type ControlPlayer, type LiveRoom, type SocialClass } from '../protocol';
 
 /** Couleurs des classes d'origine (mêmes que l'écran projeté) */
@@ -144,7 +145,7 @@ export function LiveStats({ live, history, onPick }: { live: LiveRoom; history: 
               <span className="ls-name">{c.members.join(' & ')}</span>
               <span className="ls-mini">{c.grade.toFixed(1).replace('.', ',')}</span>
               <span className="ls-mini">{k(c.budget)} €</span>
-              <span className="ls-when">{c.done ? `✓ ${history.doneAt[c.id] ?? '–'} s` : '⏳'}</span>
+              <span className="ls-when">{c.done ? `✓ ${history.doneAt[c.id] ?? '–'} s` : <GameIcon name="hourglass" />}</span>
             </li>
           ))}
         </ul>

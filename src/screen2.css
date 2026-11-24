@@ -287,3 +287,22 @@ i.real-l { width: 0.35cqw !important; height: 1.2cqw !important; background: #ff
 .scr-v2.mode-talk .scr-bar-row.top .scr-bar i, .scr-v2.mode-talk i.after { background: #c2410c; }
 .scr-v2.mode-talk i.before { background: #b9b2a3; }
 .scr-v2.mode-talk .scr-wait, .scr-v2.mode-talk .scr-legend { color: #55544d; }
+
+/* Rang du podium : pastille numérotée (remplace les médailles emoji) */
+.scr-podium b.scr-rank {
+  display: grid;
+  place-items: center;
+  width: 2.2cqw;
+  height: 2.2cqw;
+  border-radius: 50%;
+  font-size: 1.2cqw;
+  font-weight: 800;
+  background: var(--surface-3, #272d38);
+  color: var(--text, #f1f3ee);
+}
+.scr-podium b.scr-rank.r1 { background: #ffc94d; color: #1a1405; }
+.scr-podium b.scr-rank.r2 { background: #c9ced6; color: #14161a; }
+.scr-podium b.scr-rank.r3 { background: #c98a5a; color: #1a1005; }
+/* Icônes de contenu (Phosphor) */
+.scr-reform-emoji, .scr-star { display: inline-grid; place-items: center; color: var(--accent, #ffc94d); line-height: 1; }
+.scr-star { color: #ffc94d; }

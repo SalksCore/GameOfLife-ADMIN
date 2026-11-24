@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { CredentialsModal } from '../components/CredentialsModal';
+import { GameIcon } from '../components/GameIcon';
 import { fmtDay, Icon, Modal, PageHeader } from '../components/ui';
 import { request } from '../lib/api';
 import { relativeTime, type Credentials, type PlayerRow } from '../lib/players';
@@ -414,7 +415,7 @@ export function PlayersPage() {
               {parsedBulk.slice(0, 50).map((l, i) => (
                 <li key={i} className={!l.anonymous && (!l.firstName || !l.lastName) ? 'invalid' : undefined}>
                   {l.anonymous ? (
-                    <span>🎭 Pseudonyme aléatoire</span>
+                    <span><GameIcon name="masks" /> Pseudonyme aléatoire</span>
                   ) : (
                     <>
                       <span>{l.firstName || '—'}</span>

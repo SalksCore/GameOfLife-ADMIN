@@ -13,6 +13,7 @@ import {
   type Stage,
 } from '../../protocol';
 import { joinUrl, phoneHost } from '../../lib/phone-url';
+import { GameIcon } from '../GameIcon';
 import { Portrait } from '../Portrait';
 
 /** Couleurs des joueurs (mêmes valeurs que l'application PHONE) */
@@ -291,7 +292,7 @@ function StepView({ show, view, byId }: { show: ScreenStep; view: ScreenView; by
           <div className="scr-reforms">
             {show.options.map((o, i) => (
               <div key={o.id} className={`scr-reform${show.winner === o.id ? ' win' : show.winner ? ' lose' : ''}`}>
-                <span className="scr-reform-emoji">{o.emoji}</span>
+                <span className="scr-reform-emoji"><GameIcon name={o.icon} /></span>
                 <strong>{o.label}</strong>
                 <small>{o.description}</small>
                 {show.counts && (
@@ -315,7 +316,7 @@ function StepView({ show, view, byId }: { show: ScreenStep; view: ScreenView; by
             {show.formations.map((f) => (
               <div key={f.id} className={`scr-ps-row${f.demand > f.capacity ? ' tense' : ''}`}>
                 <span className="scr-ps-name">
-                  {f.emoji} {f.label}
+                  <GameIcon name={f.icon} /> {f.label}
                 </span>
                 <span className="scr-ps-bars">
                   <i className="cap" style={{ width: `${(f.capacity / max) * 100}%` }} />
@@ -328,8 +329,8 @@ function StepView({ show, view, byId }: { show: ScreenStep; view: ScreenView; by
             ))}
           </div>
           <div className="scr-chips">
-            <span>🌫️ {show.hiddenPrepa} joueur{show.hiddenPrepa > 1 ? 's' : ''} ne voi{show.hiddenPrepa > 1 ? 'ent' : 't'} pas la prépa</span>
-            <span>💶 {show.bourses} demande{show.bourses > 1 ? 's' : ''} de bourse</span>
+            <span><GameIcon name="fog" /> {show.hiddenPrepa} joueur{show.hiddenPrepa > 1 ? 's' : ''} ne voi{show.hiddenPrepa > 1 ? 'ent' : 't'} pas la prépa</span>
+            <span><GameIcon name="money" /> {show.bourses} demande{show.bourses > 1 ? 's' : ''} de bourse</span>
           </div>
         </section>
       );
@@ -347,7 +348,7 @@ function StepView({ show, view, byId }: { show: ScreenStep; view: ScreenView; by
                   return (
                     <div key={f.id} className="scr-ps-row">
                       <span className="scr-ps-name">
-                        {f.emoji} {f.label}
+                        <GameIcon name={f.icon} /> {f.label}
                       </span>
                       <span className="scr-stack-bar">
                         <i className="admis" style={{ flex: f.admis }} title="Admis" />
@@ -380,14 +381,14 @@ function StepView({ show, view, byId }: { show: ScreenStep; view: ScreenView; by
                 .map((f) => (
                   <div key={f.id} className={`scr-assign-row${f.selective ? ' sel' : ''}`}>
                     <span>
-                      {f.emoji} {f.label}
+                      <GameIcon name={f.icon} /> {f.label}
                     </span>
                     <Faces ids={f.players} byId={byId} />
                   </div>
                 ))}
               {show.vieActive.length > 0 && (
                 <div className="scr-assign-row out">
-                  <span>🧰 Vie active</span>
+                  <span><GameIcon name="toolbox" /> Vie active</span>
                   <Faces ids={show.vieActive} byId={byId} />
                 </div>
               )}
@@ -675,7 +676,7 @@ function YearView({ show, players }: { show: Extract<ScreenStep, { kind: 'year' 
         <h1>{show.label}</h1>
         {show.mini && show.phase === 'open' && (
           <p className="scr-mini-tag">
-            {show.mini.emoji} Mini-jeu : {show.mini.title}
+            <GameIcon name={show.mini.icon} /> Mini-jeu : {show.mini.title}
           </p>
         )}
         {show.phase === 'open' ? (
@@ -683,7 +684,7 @@ function YearView({ show, players }: { show: Extract<ScreenStep, { kind: 'year' 
             <b>{show.done}</b> / {show.total} ont validé
             {show.informed !== null && (
               <span className="scr-chip">
-                🧭 {show.informed} informé{show.informed > 1 ? 's' : ''} des filières sélectives
+                <GameIcon name="compass" /> {show.informed} informé{show.informed > 1 ? 's' : ''} des filières sélectives
               </span>
             )}
           </p>
@@ -716,7 +717,7 @@ function YearView({ show, players }: { show: Extract<ScreenStep, { kind: 'year' 
             {show.choices.map((c) => (
               <div key={c.label} className="scr-bar-row">
                 <span>
-                  {c.emoji} {c.label}
+                  <GameIcon name={c.icon} /> {c.label}
                 </span>
                 <span className="scr-bar">
                   <i style={{ width: `${pct(c.count, totalChoices)}%` }} />
@@ -768,7 +769,7 @@ function FinalView({ show, byId, total }: { show: Extract<ScreenStep, { kind: 'f
                           <Token avatar={p.avatar} color={p.color} />
                         </span>
                         {move !== 0 && <span className={`scr-move ${move > 0 ? 'up' : 'down'}`}>{move > 0 ? '▲' : '▼'}</span>}
-                        {asc.has(id) && <span className="scr-star">⭐</span>}
+                        {asc.has(id) && <span className="scr-star"><GameIcon name="star" /></span>}
                       </li>
                     );
                   })}
@@ -790,7 +791,7 @@ function FinalView({ show, byId, total }: { show: Extract<ScreenStep, { kind: 'f
                     const p = byId.get(id);
                     return p ? (
                       <li key={id}>
-                        <b>{['🥇', '🥈', '🥉'][i]}</b>
+                        <b className={`scr-rank r${i + 1}`}>{i + 1}</b>
                         <Token avatar={p.avatar} color={p.color} />
                         <span>{p.displayName}</span>
                         <small data-cls={p.origin} className="scr-origin-tag">
@@ -837,7 +838,7 @@ function FinalView({ show, byId, total }: { show: Extract<ScreenStep, { kind: 'f
                 {f.takeaways.map((t, i) => (
                   <p key={i}>{t}</p>
                 ))}
-                {f.ascending.length > 0 && <p className="scr-muted">⭐ en ascension : encore quelques années au même poste pour changer de classe.</p>}
+                {f.ascending.length > 0 && <p className="scr-muted"><GameIcon name="star" /> en ascension : encore quelques années au même poste pour changer de classe.</p>}
               </section>
             </>
           ) : (
@@ -885,7 +886,7 @@ function LobbyScreen({ view }: { view: ScreenView }) {
         </section>
 
         <p className="scr-privacy">
-          🔒 Ton compte : prénom et nom, rien d’autre (pseudo au hasard sur demande). Ta famille de jeu est tirée au hasard.
+          <GameIcon name="lock" /> Ton compte : prénom et nom, rien d’autre (pseudo au hasard sur demande). Ta famille de jeu est tirée au hasard.
           Sondages anonymes. Rien n’est noté. Tout est supprimé 3 mois après la partie.
         </p>
 
@@ -903,7 +904,7 @@ function LobbyScreen({ view }: { view: ScreenView }) {
                   <Token avatar={p.avatar} color={p.color} dim={!p.connected} />
                   <span>
                     {p.displayName}
-                    {p.partner && <small> 🤝 {p.partner}</small>}
+                    {p.partner && <small> <GameIcon name="handshake" /> {p.partner}</small>}
                   </span>
                 </li>
               ))}

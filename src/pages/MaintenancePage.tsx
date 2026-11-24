@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { GameIcon } from '../components/GameIcon';
 import { fmtDate, Icon, PageHeader, useConfirm } from '../components/ui';
 import { useLive } from '../lib/admin-socket';
 import { request } from '../lib/api';
@@ -145,7 +146,7 @@ export function MaintenancePage() {
           </div>
           <div className="phone-preview">
             <div className="phone-screen">
-              <div className="phone-icon">🛠️</div>
+              <div className="phone-icon"><GameIcon name="wrench" /></div>
               <strong>Maintenance en cours</strong>
               <p>{message.trim() || 'Le jeu est en maintenance. Nous revenons très vite !'}</p>
               {endsAt && <p className="phone-eta">Retour prévu : {fmtDate.format(new Date(endsAt))}</p>}

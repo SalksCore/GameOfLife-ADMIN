@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { GameIcon, isGameIcon } from './GameIcon';
 import { useLive } from '../lib/admin-socket';
 import { CLASS_SHORT, SOCIAL_CLASSES, type DeckAction, type LiveRoom } from '../protocol';
 
@@ -49,7 +50,7 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
   const left = screen.timer.endsAt !== null ? Math.max(0, Math.ceil((screen.timer.endsAt - now) / 1000)) : screen.timer.remaining !== null ? Math.ceil(screen.timer.remaining / 1000) : null;
   const closeLabel = kind === 'year' ? 'Clore l’année' : kind === 'parcoursup' ? 'Clore les vœux' : kind === 'parcoursupResults' ? 'Clore réponses' : kind === 'jobs' ? 'Recruter' : kind === 'poll' ? 'Fermer sondage' : 'Clore';
   const revealLabel = control.revealLabel;
-  const revealIcon = revealLabel === 'Lecture' ? '📖' : revealLabel === 'Résultats' ? '📊' : revealLabel === 'Étage suivant' ? '🔺' : '✨';
+  const revealIcon = revealLabel === 'Lecture' ? 'book' : revealLabel === 'Résultats' ? 'chart' : revealLabel === 'Étage suivant' ? 'triangle' : 'sparkle';
   const done = control.characters.filter((c) => c.done).length;
   const cards = control.stepCards.map((id) => control.cards.find((c) => c.id === id)).filter(Boolean) as LiveRoom['control']['cards'];
   const toggleCard = (id: string) => void run('admin:card', { roomId, cardId: control.shownCard === id ? null : id });
@@ -57,26 +58,26 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
     void run('admin:give', { roomId, target, amount }, `${amount > 0 ? '+' : '−'}${money.format(Math.abs(amount))} € · ${label}`);
 
   const direct: DeckKey[] = [
-    { id: 'prev', icon: '⏮', label: 'Précédent', tone: 'nav', kbd: '←', disabled: !started || control.cursor <= 0, onPress: () => deck('prev') },
+    { id: 'prev', icon: 'prev', label: 'Précédent', tone: 'nav', kbd: '←', disabled: !started || control.cursor <= 0, onPress: () => deck('prev') },
     {
       id: 'next',
-      icon: '⏭',
+      icon: 'next',
       label: control.canClose && !replay ? 'Clore + suivant' : 'Suivant',
       tone: 'go',
       kbd: '→',
       disabled: !started,
       onPress: () => deck('next'),
     },
-    { id: 'close', icon: '⏹', label: closeLabel, tone: 'warn', kbd: 'C', disabled: !control.canClose, onPress: () => deck('close') },
+    { id: 'close', icon: 'stop', label: closeLabel, tone: 'warn', kbd: 'C', disabled: !control.canClose, onPress: () => deck('close') },
     { id: 'reveal', icon: revealIcon, label: revealLabel, tone: 'info', kbd: 'R', disabled: !control.canReveal, active: control.canReveal, onPress: () => deck('reveal') },
     {
       id: 'timer',
-      icon: left === null ? '⏱' : paused ? '⏸' : String(left),
+      icon: left === null ? 'timer' : paused ? 'pause' : String(left),
       label: left === null ? 'Pas de chrono' : paused ? 'En pause' : 'secondes',
       tone: left !== null && left <= 10 && !paused ? 'danger' : 'plain',
       display: true,
     },
-    { id: 'pause', icon: paused ? '▶' : '⏸', label: paused ? 'Reprendre' : 'Pause', tone: paused ? 'go' : 'plain', kbd: 'P', active: paused, disabled: !started, onPress: () => deck(paused ? 'resume' : 'pause') },
+    { id: 'pause', icon: paused ? 'play' : 'pause', label: paused ? 'Reprendre' : 'Pause', tone: paused ? 'go' : 'plain', kbd: 'P', active: paused, disabled: !started, onPress: () => deck(paused ? 'resume' : 'pause') },
     { id: 'extend', icon: '+15', label: 'secondes', tone: 'plain', disabled: left === null, onPress: () => deck('extend') },
     {
       id: 'done',
@@ -87,7 +88,7 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
     },
     {
       id: 'card',
-      icon: control.shownCard ? '🙈' : '🃏',
+      icon: control.shownCard ? 'hidden' : 'cards',
       label: control.shownCard ? `Retirer ${control.shownCard}` : cards[0] ? `Carte ${cards[0].id}` : 'Pas de carte',
       sub: control.shownCard ? undefined : cards[0]?.figure,
       tone: 'card',
@@ -96,7 +97,7 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
       disabled: !started || (!control.shownCard && !cards[0]),
       onPress: () => (control.shownCard ? void run('admin:card', { roomId, cardId: null }) : cards[0] && toggleCard(cards[0].id)),
     },
-    { id: 'projector', icon: '🖥', label: 'Écran projeté', tone: 'nav', onPress: opts.onProjector, disabled: !opts.onProjector },
+    { id: 'projector', icon: 'monitor', label: 'Écran projeté', tone: 'nav', onPress: opts.onProjector, disabled: !opts.onProjector },
     {
       id: 'step',
       icon: `${control.cursor + 1}`,
@@ -109,12 +110,12 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
 
   const eventKeys: DeckKey[] = control.events.map((ev) => ({
     id: `ev-${ev.id}`,
-    icon: ev.emoji,
+    icon: ev.icon,
     label: ev.label,
     sub: ev.description,
     tone: 'event' as const,
     disabled: !drawn,
-    onPress: () => void run('admin:event', { roomId, eventId: ev.id }, `${ev.emoji} ${ev.label}`),
+    onPress: () => void run('admin:event', { roomId, eventId: ev.id }, ev.label),
   }));
 
   // Une touche par joueur : ouvre l'éditeur (argent, moyenne, contacts, énergie, statuts…)
@@ -130,8 +131,8 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
   }));
 
   const endKeys: DeckKey[] = [
-    { id: 'export', icon: '⬇', label: 'Exporter CSV', tone: 'info', disabled: !drawn || !opts.onExport, onPress: opts.onExport },
-    { id: 'end', icon: '🏁', label: 'Terminer', sub: 'et enregistrer', tone: 'danger', disabled: screen.phase !== 'playing' || !opts.onEnd, onPress: opts.onEnd },
+    { id: 'export', icon: 'download', label: 'Exporter CSV', tone: 'info', disabled: !drawn || !opts.onExport, onPress: opts.onExport },
+    { id: 'end', icon: 'flag', label: 'Terminer', sub: 'et enregistrer', tone: 'danger', disabled: screen.phase !== 'playing' || !opts.onEnd, onPress: opts.onEnd },
   ];
 
   const cardKeys: DeckKey[] = [
@@ -174,13 +175,13 @@ export function useDeckPages(live: LiveRoom, offset: number, opts: { onProjector
   }));
 
   return [
-    { id: 'direct', label: 'Pilotage', icon: '🎛', keys: direct },
-    { id: 'events', label: `Événements · ${eventKeys.length}`, icon: '⚡', keys: eventKeys },
-    { id: 'money', label: 'Argent', icon: '💶', keys: moneyKeys },
-    { id: 'players', label: 'Joueurs · modifier', icon: '✏️', keys: playerKeys },
-    { id: 'cards', label: 'Le saviez-vous ?', icon: '🃏', keys: cardKeys },
-    { id: 'end', label: 'Fin de l’exposé', icon: '🏁', keys: endKeys },
-    { id: 'steps', label: 'Déroulé', icon: '🗺', keys: stepKeys },
+    { id: 'direct', label: 'Pilotage', icon: 'sliders', keys: direct },
+    { id: 'events', label: `Événements · ${eventKeys.length}`, icon: 'bolt', keys: eventKeys },
+    { id: 'money', label: 'Argent', icon: 'money', keys: moneyKeys },
+    { id: 'players', label: 'Joueurs · modifier', icon: 'pencil', keys: playerKeys },
+    { id: 'cards', label: 'Le saviez-vous ?', icon: 'cards', keys: cardKeys },
+    { id: 'end', label: 'Fin de l’exposé', icon: 'flag', keys: endKeys },
+    { id: 'steps', label: 'Déroulé', icon: 'map', keys: stepKeys },
   ];
 }
 
@@ -203,7 +204,7 @@ export function StreamDeck({ pages, cols = 4, big = false }: { pages: DeckPage[]
         .map((p) => (
           <section key={p.id} className={`sd-section sd-${p.id}`}>
             <h3>
-              <span aria-hidden="true">{p.icon}</span> {p.label}
+              <GameIcon name={p.icon} /> {p.label}
             </h3>
             <div className="sd-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
               {p.keys.map((k) => (
@@ -227,7 +228,8 @@ function Key({ k }: { k: DeckKey }) {
     clearTimeout(t.current);
     t.current = setTimeout(() => setPressed(false), 260);
   };
-  const long = k.icon.length > 3;
+  const isIcon = isGameIcon(k.icon);
+  const long = !isIcon && k.icon.length > 3;
   return (
     <button
       className={`sd-key tone-${k.tone ?? 'plain'}${k.active ? ' active' : ''}${pressed ? ' pressed' : ''}${k.display ? ' display' : ''}`}
@@ -237,7 +239,7 @@ function Key({ k }: { k: DeckKey }) {
       aria-label={k.label}
       tabIndex={k.display ? -1 : 0}
     >
-      <span className={`sd-icon${long ? ' long' : ''}`}>{k.icon}</span>
+      <span className={`sd-icon${long ? ' long' : ''}`}>{isIcon ? <GameIcon name={k.icon} /> : k.icon}</span>
       <span className="sd-label">{k.label}</span>
       {k.sub && <span className="sd-sub">{k.sub}</span>}
       {k.kbd && <kbd className="sd-kbd">{k.kbd}</kbd>}

@@ -57,7 +57,7 @@ export function PlayerEditor({ char, roomId, onDone, big = false }: { char: Cont
     const res = await call('admin:editPlayer', { roomId, characterId: char.id, patch });
     setBusy(false);
     if (!res.ok) return setError(res.error);
-    onDone?.(`✏️ ${char.members.join(' & ')} modifié`);
+    onDone?.(`${char.members.join(' & ')} modifié`);
   }
 
   const name = char.members.join(' & ');
@@ -70,7 +70,7 @@ export function PlayerEditor({ char, roomId, onDone, big = false }: { char: Cont
             {CLASS_LABELS[char.origin]}
           </span>
         </div>
-        <span className={`pe-done${char.done ? ' on' : ''}`}>{char.done ? '✓ a validé' : '⏳ en cours'}</span>
+        <span className={`pe-done${char.done ? ' on' : ''}`}>{char.done ? '✓ a validé' : 'en cours'}</span>
       </div>
       <p className="pe-status">{char.status}</p>
       <div className="pe-facts">
@@ -134,10 +134,10 @@ export function PlayerEditor({ char, roomId, onDone, big = false }: { char: Cont
       <div className="pe-toggles">
         {(
           [
-            ['boursier', '🎓 Boursier'],
-            ['info', '🧭 Informé·e (filières sélectives)'],
-            ['cordees', '🪢 Cordées de la réussite'],
-            ['homeOwner', '🏠 Propriétaire'],
+            ['boursier', 'Boursier'],
+            ['info', 'Informé·e (filières sélectives)'],
+            ['cordees', 'Cordées de la réussite'],
+            ['homeOwner', 'Propriétaire'],
           ] as const
         ).map(([k, label]) => (
           <label key={k} className={`pe-toggle${draft[k] !== base[k] ? ' changed' : ''}`}>
