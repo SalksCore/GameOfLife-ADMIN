@@ -13,6 +13,7 @@ import {
   type Stage,
 } from '../../protocol';
 import { joinUrl, phoneHost } from '../../lib/phone-url';
+import { Portrait } from '../Portrait';
 
 /** Couleurs des joueurs (mêmes valeurs que l'application PHONE) */
 const PLAYER_COLORS: Record<string, [string, string]> = {
@@ -27,10 +28,10 @@ const PLAYER_COLORS: Record<string, [string, string]> = {
 };
 
 export function Token({ avatar, color, dim = false }: { avatar: string; color: string; dim?: boolean }) {
-  const [a, b] = PLAYER_COLORS[color] ?? PLAYER_COLORS.violet!;
+  const [a] = PLAYER_COLORS[color] ?? PLAYER_COLORS.violet!;
   return (
-    <span className={`scr-token${dim ? ' dim' : ''}`} style={{ background: `linear-gradient(160deg, ${a}, ${b})` }} aria-hidden="true">
-      {avatar}
+    <span className={`scr-token${dim ? ' dim' : ''}`} aria-hidden="true">
+      <Portrait code={avatar} bg={a} />
     </span>
   );
 }

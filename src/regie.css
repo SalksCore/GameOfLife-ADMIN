@@ -352,7 +352,6 @@
 .rg-detail .scr-token {
   width: 26px;
   height: 26px;
-  font-size: 15px;
   display: inline-grid;
   place-items: center;
   border-radius: 50%;
@@ -683,7 +682,6 @@
 .rg-now-list .scr-token {
   width: 22px;
   height: 22px;
-  font-size: 13px;
   display: inline-grid;
   place-items: center;
   border-radius: 50%;
