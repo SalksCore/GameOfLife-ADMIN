@@ -135,7 +135,7 @@ export function PlayerEditor({ char, roomId, onDone, big = false }: { char: Cont
         {(
           [
             ['boursier', 'Boursier'],
-            ['info', 'Informé·e (filières sélectives)'],
+            ['info', 'Au courant des filières sélectives'],
             ['cordees', 'Cordées de la réussite'],
             ['homeOwner', 'Propriétaire'],
           ] as const

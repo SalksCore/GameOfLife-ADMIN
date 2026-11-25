@@ -795,7 +795,7 @@ function FinalView({ show, byId, total }: { show: Extract<ScreenStep, { kind: 'f
                         <Token avatar={p.avatar} color={p.color} />
                         <span>{p.displayName}</span>
                         <small data-cls={p.origin} className="scr-origin-tag">
-                          né·e {CLASS_SHORT[p.origin].toLowerCase()}
+                          origine : {CLASS_SHORT[p.origin].toLowerCase()}
                         </small>
                       </li>
                     ) : null;

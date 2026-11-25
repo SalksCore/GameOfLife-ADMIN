@@ -185,7 +185,7 @@ function Regie({ live, offset, online }: { live: LiveRoom; offset: number; onlin
 
   async function kick(row: Row) {
     if (await confirm('Retirer le joueur', <p>Retirer {row.displayName} de la partie ? (dernier recours)</p>, true)) {
-      if (await run('admin:kick', { roomId, playerId: row.id })) notify(`${row.displayName} retiré·e`);
+      if (await run('admin:kick', { roomId, playerId: row.id })) notify(`Retrait de ${row.displayName}`);
     }
   }
   async function give(target: string, amount: number, label: string) {
@@ -555,7 +555,7 @@ function PlayerDetail({ row }: { row: Row }) {
         <Token avatar={row.avatar} color={row.color} dim={!row.connected} />
         <div>
           <strong>{g ? g.members.join(' & ') : row.displayName}</strong>
-          <small>{row.connected ? 'Connecté·e' : 'Déconnecté·e'}</small>
+          <small>{row.connected ? 'En ligne' : 'Hors ligne'}</small>
         </div>
       </div>
       {g ? (
