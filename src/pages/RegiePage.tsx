@@ -22,7 +22,6 @@ import {
   type GameExport,
   type LiveRoom,
   type SocialClass,
-  type StepKind,
 } from '../protocol';
 import { openDeck } from './DeckPage';
 import { openProjector } from './ProjectorPage';
@@ -31,24 +30,6 @@ const money = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR
 const clock = (s: number) => `${s < 0 ? '−' : ''}${Math.floor(Math.abs(s) / 60)}:${String(Math.floor(Math.abs(s)) % 60).padStart(2, '0')}`;
 
 type Run = (event: Parameters<ReturnType<typeof useLive>['call']>[0], payload: object) => Promise<boolean>;
-
-const KIND_ICON: Record<StepKind, string> = {
-  slide: '▭',
-  poll: '◆',
-  pollCompare: '◆',
-  vote: '◆',
-  draw: '●',
-  year: '●',
-  bac: '●',
-  parcoursup: '●',
-  parcoursupResults: '●',
-  parcoursupFinal: '●',
-  diploma: '●',
-  jobs: '●',
-  final: '●',
-  stats: '●',
-  debrief: '◈',
-};
 
 /** Joueur affiché dans la régie */
 interface Row {
@@ -528,7 +509,7 @@ function NextUp({ control }: { control: ControlView }) {
   let i = control.cursor + 1;
   while (i < control.deck.length && !control.deck[i]!.enabled) i++;
   const next = control.deck[i];
-  return <p className="rg-next">{next ? `Ensuite : ${KIND_ICON[next.kind]} ${next.title} (${next.who})` : 'C’est la dernière étape.'}</p>;
+  return <p className="rg-next">{next ? `Ensuite : ${next.title} (${next.who})` : 'C’est la dernière étape.'}</p>;
 }
 
 function ClassSplit({ chars }: { chars: ControlPlayer[] }) {
