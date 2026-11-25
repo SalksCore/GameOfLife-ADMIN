@@ -23,7 +23,7 @@
 .scr-progress { flex: 1; display: flex; gap: 0.25cqw; }
 .scr-progress i { flex: 1; height: 0.35cqw; border-radius: 1cqw; background: rgba(255, 255, 255, 0.12); }
 .scr-progress i.done { background: rgba(198, 242, 90, 0.55); }
-.scr-progress i.now { background: var(--life); box-shadow: 0 0 0.8cqw var(--life); }
+.scr-progress i.now { background: var(--life); }
 .scr-clock2 { display: flex; align-items: center; gap: 0.7cqw; }
 .scr-clock2 .scr-timer-bar { width: 9cqw; }
 .scr-clock2 strong { font-size: 2.1cqw; font-variant-numeric: tabular-nums; font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; min-width: 5cqw; }
@@ -138,7 +138,7 @@ i.after { background: var(--life); }
 .scr-wall-p .scr-token { width: 3.6cqw; height: 3.6cqw; font-size: 2cqw; }
 .scr-wall.dense .scr-token { width: 2.8cqw; height: 2.8cqw; font-size: 1.6cqw; }
 .scr-wall-p small { font-size: 0.95cqw; color: var(--text-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.scr-wall-p.done .scr-ring { transform: translateY(-0.3cqw); box-shadow: 0 0 0 0.2cqw var(--life), 0 0.6cqw 1.4cqw rgba(0, 0, 0, 0.5); }
+.scr-wall-p.done .scr-ring { transform: translateY(-0.3cqw); box-shadow: 0 0 0 0.2cqw var(--life); }
 .scr-wall-p.away { opacity: 0.4; }
 .scr-check { position: absolute; right: -0.4cqw; bottom: -0.2cqw; width: 1.4cqw; height: 1.4cqw; border-radius: 50%; display: grid; place-items: center; background: var(--life); color: var(--ink); font-size: 0.9cqw; font-style: normal; font-weight: 900; animation: scr-popin 0.3s both; }
 
@@ -151,7 +151,7 @@ i.after { background: var(--life); }
 .scr-reform-bar { margin-top: auto; position: relative; height: 2.4cqw; border-radius: 0.6cqw; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
 .scr-reform-bar i { display: block; height: 100%; background: var(--text-3); animation: scr-grow 1.2s both; transform-origin: left; }
 .scr-reform-bar b { position: absolute; right: 0.8cqw; top: 50%; transform: translateY(-50%); font-size: 1.4cqw; }
-.scr-reform.win { border-color: var(--life); transform: scale(1.04); box-shadow: 0 0 3cqw rgba(198, 242, 90, 0.25); }
+.scr-reform.win { border-color: var(--life); transform: scale(1.04); }
 .scr-reform.win .scr-reform-bar i { background: var(--life); }
 .scr-reform.lose { opacity: 0.5; }
 
@@ -209,8 +209,8 @@ i.refuse { background: var(--danger); }
 .scr-ticker li.tone-good { border-color: rgba(198, 242, 90, 0.5); }
 .scr-ticker li.tone-bad { border-color: rgba(255, 107, 91, 0.55); }
 .scr-ticker li.tone-admin { border-color: rgba(255, 201, 77, 0.55); }
-.scr-fact-wrap { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(8, 10, 14, 0.72); backdrop-filter: blur(0.4cqw); animation: scr-fade 0.35s both; }
-.scr-fact { width: 62%; display: grid; gap: 1cqw; padding: 3cqw 3.4cqw; border-radius: 2.4cqw; background: #f6f1e4; color: #1d1d1b; box-shadow: 0 3cqw 6cqw rgba(0, 0, 0, 0.6); animation: scr-card-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.2) both; }
+.scr-fact-wrap { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(8, 10, 14, 0.72); animation: scr-fade 0.35s both; }
+.scr-fact { width: 62%; display: grid; gap: 1cqw; padding: 3cqw 3.4cqw; border-radius: 2.4cqw; background: #f6f1e4; color: #1d1d1b; animation: scr-card-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.2) both; }
 @keyframes scr-card-in { from { transform: translateY(4cqw) rotate(-3deg) scale(0.9); opacity: 0; } }
 .scr-fact .scr-eyebrow { color: #7a6420; }
 .scr-fact-figure { font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif; font-size: 7cqw; font-weight: 800; line-height: 0.95; letter-spacing: -0.04em; color: #c2410c; }
@@ -243,7 +243,7 @@ i.refuse { background: var(--danger); }
 .scr-db-cls { color: var(--cls); font-weight: 700; }
 .scr-db-track { position: relative; height: 1.7cqw; border-radius: 0.5cqw; background: rgba(255, 255, 255, 0.06); }
 .scr-db-track .game { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--cls); animation: scr-grow 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: left; }
-.scr-db-track .real { position: absolute; top: -0.35cqw; bottom: -0.35cqw; width: 0.35cqw; margin-left: -0.17cqw; border-radius: 0.2cqw; background: #fff; box-shadow: 0 0 0.6cqw rgba(255, 255, 255, 0.7); }
+.scr-db-track .real { position: absolute; top: -0.35cqw; bottom: -0.35cqw; width: 0.35cqw; margin-left: -0.17cqw; border-radius: 0.2cqw; background: #fff; }
 .scr-db-row b { text-align: right; font-size: 1.45cqw; font-variant-numeric: tabular-nums; }
 .scr-db-real { color: var(--text-2); font-size: 1cqw; }
 i.game-l { background: var(--text-2); }

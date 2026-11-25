@@ -773,7 +773,7 @@
 .sd-key.pressed { background: color-mix(in srgb, var(--tone) 45%, #26282d); }
 .sd-key:disabled { opacity: 0.3; cursor: default; }
 .sd-key.display { cursor: default; background: #1d1e22; border-style: dashed; }
-.sd-key.active { background: var(--tone); border-color: var(--tone); color: #111; box-shadow: 0 6px 18px -8px var(--tone); }
+.sd-key.active { background: var(--tone); border-color: var(--tone); color: #111; }
 .sd-key.active .sd-label, .sd-key.active .sd-sub { color: #111; }
 .sd-icon { font-size: 26px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
 .sd-icon.long { font-size: 15px; letter-spacing: -0.02em; text-align: center; line-height: 1.1; }
@@ -879,7 +879,7 @@
 .ls-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; font-weight: 700; }
 
 /* ================= Tablette : éditeur en feuille ================= */
-.sd-sheet { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(3px); }
+.sd-sheet { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.6); }
 .sd-sheet-card { --rg-bg: #18191c; --rg-panel: #222327; --rg-line: #34363c; --rg-text: #e4e6eb; --rg-muted: #8b9099; --rg-accent: #c6f25a; position: relative; width: min(620px, 100%); max-height: 100%; overflow: auto; border-radius: 20px; background: #222327; border: 1px solid #34363c; }
 .sd-sheet-close { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 12px; border: 1px solid #34363c; background: #2b2d32; color: #e4e6eb; font-size: 16px; cursor: pointer; z-index: 1; }
 .sd-sheet-card .pe { padding: 18px; }

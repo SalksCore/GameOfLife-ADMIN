@@ -167,7 +167,6 @@ code,
 }
 .life-grid span.alive {
   background: var(--life);
-  box-shadow: 0 0 14px rgba(198, 242, 90, 0.35);
 }
 
 /* ---------- Boutons ---------- */
@@ -454,7 +453,7 @@ input[type='radio'] {
 }
 .dot.on {
   background: var(--life);
-  box-shadow: 0 0 0 3px var(--life-soft), 0 0 10px rgba(198, 242, 90, 0.5);
+  box-shadow: 0 0 0 3px var(--life-soft);
 }
 .dot.off {
   background: var(--text-3);
@@ -475,9 +474,7 @@ input[type='radio'] {
   flex-direction: column;
   justify-content: space-between;
   gap: 32px;
-  background:
-    radial-gradient(70% 55% at 10% 100%, rgba(198, 242, 90, 0.12), transparent 70%),
-    var(--bg-deep);
+  background: var(--bg-deep);
   border-right: 1px solid var(--line);
 }
 .login-brand > * {
@@ -560,7 +557,6 @@ input[type='radio'] {
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 36px;
-  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
   display: grid;
   gap: 18px;
 }
@@ -657,7 +653,6 @@ input[type='radio'] {
   margin-top: -9px;
   border-radius: 0 4px 4px 0;
   background: var(--life);
-  box-shadow: 0 0 12px rgba(198, 242, 90, 0.6);
 }
 .nav-item span:not(.nav-count) {
   flex: 1;
@@ -719,9 +714,7 @@ input[type='radio'] {
 }
 .main {
   min-width: 0;
-  background:
-    radial-gradient(900px 300px at 100% 0%, rgba(198, 242, 90, 0.05), transparent 70%),
-    var(--bg);
+  background: var(--bg);
 }
 .content {
   padding: 30px 36px 56px;
@@ -986,12 +979,10 @@ input[type='radio'] {
   border: 1px solid var(--line-strong);
   border-radius: 18px;
   background: var(--surface);
-  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9);
   color: var(--text);
 }
 .modal::backdrop {
   background: rgba(5, 7, 10, 0.7);
-  backdrop-filter: blur(3px);
 }
 .modal-head {
   display: flex;
